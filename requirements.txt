@@ -5,4 +5,4 @@ numpy>=1.26,<2.0
 onnxruntime>=1.18
 torch==2.5.1+cpu
 torchvision==0.20.1+cpu
-transformers>=4.40,<5.0
+transformers>=5.0,<6.0
