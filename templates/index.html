@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SnakeVision AI | Snake Classification & Safety</title>
+  <meta name="description" content="Experimental snake-species image classification, bite-area image scoring, species precautions, and conservative emergency guidance.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="SnakeVision home">
+      <span class="brand-mark">S</span>
+      <span>SnakeVision <small>AI CLASSIFICATION</small></span>
+    </a>
+    <span class="header-pill"><span class="status-dot"></span> Local prototype</span>
+  </header>
+
+  <main class="layout">
+    <section class="hero">
+      <div class="eyebrow">TWO MODELS · TWO DIFFERENT IMAGE TYPES</div>
+      <h1>Choose the right photo.<br><span>Get cautious, useful guidance.</span></h1>
+      <p>The bite-area image model and snake-species model were trained for different tasks. Upload each photo in its own box; either model can be run independently.</p>
+      <div class="model-chips"><span>01 · ONNX ResNet18 · bite-area photo</span><span>02 · DINOv2 · snake photo · 13 species</span></div>
+    </section>
+
+    <section id="emergency-guidance" class="emergency-banner" aria-labelledby="emergency-title">
+      <div class="emergency-symbol" aria-hidden="true">!</div>
+      <div>
+        <h2 id="emergency-title">Suspected snakebite? Get emergency medical help now.</h2>
+        <p>Do not wait for this website or for symptoms. Move away from the snake, keep the person still, immobilize the bitten limb with a splint if possible, remove rings or tight items near the area if easy to do, and arrange urgent transport to a hospital.</p>
+        <p><strong>Do not</strong> cut or suck the wound, apply a tight tourniquet, use ice, or try traditional/herbal remedies. Do not try to catch or kill the snake.</p>
+        <a href="https://www.who.int/teams/control-of-neglected-tropical-diseases/snakebite-envenoming/treatment" target="_blank" rel="noopener noreferrer">WHO snakebite treatment guidance ↗</a>
+      </div>
+    </section>
+
+    {% if not bite_model_ready or not species_model_ready %}
+    <section class="error-banner">
+      <strong>One or more model files could not be loaded.</strong>
+      <p>Bite model: {{ 'ready' if bite_model_ready else 'not ready' }} · Species model: {{ 'ready' if species_model_ready else 'not ready' }}</p>
+      <p>Check the server terminal and make sure <code>model/bite_resnet18.onnx</code> and <code>model/final_snake_model.pt</code> exist. A working model can still be used separately if the other one is unavailable.</p>
+    </section>
+    {% endif %}
+
+    <section class="privacy-banner">
+      <strong>Privacy:</strong> this application processes uploads in memory and does not intentionally save the uploaded images. Avoid uploading identifiable or sensitive images unless necessary. The browser preview is kept in your current page only.
+    </section>
+
+    <form id="upload-form" class="upload-form" novalidate>
+      <section class="upload-grid">
+        <article class="upload-panel">
+          <div class="section-heading">
+            <span class="step">01</span>
+            <div><h2>Bite-area photo</h2><p>For the MATLAB ONNX image classifier</p></div>
+          </div>
+          <div class="model-purpose"><strong>Use for:</strong> photo of the affected body area, if available. The model scores image patterns; it cannot determine whether venom entered the body or diagnose a bite.</div>
+          <label for="bite-image" id="bite-drop-zone" class="drop-zone">
+            <input id="bite-image" name="bite_image" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" {% if not bite_model_ready %}disabled{% endif %}>
+            <div id="bite-placeholder" class="upload-placeholder"><div class="upload-icon">↑</div><strong>Choose bite-area image</strong><span>JPG, PNG, WEBP, BMP · max 8 MB</span></div>
+            <img id="bite-preview" class="preview hidden" alt="Bite-area image preview">
+          </label>
+          <div id="bite-file-name" class="file-name">No bite-area photo selected</div>
+        </article>
+
+        <article class="upload-panel">
+          <div class="section-heading">
+            <span class="step purple-step">02</span>
+            <div><h2>Snake photo</h2><p>For the DINOv2 13-species classifier</p></div>
+          </div>
+          <div class="model-purpose"><strong>Use for:</strong> clear photo of the snake from a safe distance. Never move closer or handle it to obtain an image.</div>
+          <label for="snake-image" id="snake-drop-zone" class="drop-zone purple-zone">
+            <input id="snake-image" name="snake_image" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" {% if not species_model_ready %}disabled{% endif %}>
+            <div id="snake-placeholder" class="upload-placeholder"><div class="upload-icon purple-icon">↑</div><strong>Choose snake image</strong><span>JPG, PNG, WEBP, BMP · max 8 MB</span></div>
+            <img id="snake-preview" class="preview hidden" alt="Snake image preview">
+          </label>
+          <div id="snake-file-name" class="file-name">No snake photo selected</div>
+        </article>
+      </section>
+
+      <div class="analyze-row">
+        <button id="analyze-button" class="primary-button" type="submit" {% if not bite_model_ready and not species_model_ready %}disabled{% endif %}><span>Analyze selected image(s)</span><span aria-hidden="true">→</span></button>
+        <p id="progress" class="progress" role="status" aria-live="polite">Upload either image or both in their separate boxes. The selected image is not stored by this app.</p>
+      </div>
+    </form>
+
+    <section id="results-section" class="results-section hidden" aria-live="polite">
+      <div class="results-heading"><div><div class="eyebrow">ANALYSIS</div><h2>Results and precautions</h2></div></div>
+      <div class="result-grid">
+        <article id="bite-result-card" class="result-card hidden">
+          <div class="result-card-head"><span class="result-icon">01</span><span class="result-label">ONNX · BITE-AREA IMAGE SCORE</span></div>
+          <h3 id="bite-label">—</h3>
+          <p class="confidence-line">Model score <strong id="bite-confidence">—</strong> <span class="not-probability">(not a calibrated medical probability)</span></p>
+          <div class="score-list" id="bite-scores"></div>
+          <div id="bite-warnings" class="warning-callout hidden"><strong>Verification / quality warnings</strong><ul id="bite-warning-list" class="precaution-list"></ul></div>
+          <div class="warning-callout urgent-callout"><strong>Not a medical diagnosis</strong><p id="bite-medical-warning"></p></div>
+          <h4>First aid for a suspected bite</h4>
+          <ul id="first-aid-list" class="precaution-list"></ul>
+          <div id="bite-sources" class="source-links"></div>
+        </article>
+
+        <article id="species-result-card" class="result-card hidden">
+          <div class="result-card-head"><span class="result-icon purple-icon">02</span><span class="result-label">DINOV2 · CLOSED-SET SPECIES CLASSIFIER</span></div>
+          <div id="species-uncertain-banner" class="warning-callout hidden"><strong>Unable to identify confidently</strong><p id="species-uncertain-reason"></p></div>
+          <h3 id="species-label">—</h3>
+          <p id="species-candidate" class="result-footnote hidden"></p>
+          <p class="scientific-name" id="species-scientific-name"></p>
+          <div id="species-status" class="status-badge">Risk information: not verified</div>
+          <p class="confidence-line">Top model score <strong id="species-confidence">—</strong> <span class="not-probability">(not a calibrated probability)</span></p>
+          <div class="score-list" id="species-scores"></div>
+          <div id="species-warnings" class="warning-callout hidden"><strong>Image and model warnings</strong><ul id="species-warning-list" class="precaution-list"></ul></div>
+          <p id="species-summary" class="species-summary"></p>
+          <div id="species-precautions-wrap">
+            <h4>Precautions for the predicted species</h4>
+            <ul id="species-precautions" class="precaution-list"></ul>
+            <div id="species-sources" class="source-links"></div>
+          </div>
+          <p id="species-notice" class="result-footnote"></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="diagnostics-panel">
+      <div class="section-heading"><span class="step">03</span><div><h2>Model checks before public use</h2><p>These checks show what is verified and what still needs human review.</p></div></div>
+      <div class="diagnostics-grid">
+        <div class="diagnostic-item"><strong>ONNX class order</strong><span id="diag-bite-order" class="diagnostic-status">Checking…</span><p>Confirm output index 0 and 1 against the original MATLAB class list.</p></div>
+        <div class="diagnostic-item"><strong>ONNX preprocessing</strong><span id="diag-bite-preprocess" class="diagnostic-status">Checking…</span><p>Confirm RGB/BGR, pixel scale, resize and normalization in MATLAB.</p></div>
+        <div class="diagnostic-item"><strong>Species thresholds</strong><span id="diag-species-threshold" class="diagnostic-status">Checking…</span><p>Calibrate on labeled validation snakes plus unrelated negative controls—not test images.</p></div>
+        <div class="diagnostic-item"><strong>Uploads & privacy</strong><span class="diagnostic-status good">Memory only</span><p>Uploads are size/type checked and not deliberately written to disk by this app.</p></div>
+      </div>
+      <p class="diagnostics-note">A score threshold can flag some uncertain images, but it cannot replace a separately trained and tested snake-versus-non-snake detector. Even a high score can be wrong.</p>
+    </section>
+
+    <section class="safety">
+      <span class="safety-icon">!</span>
+      <div>
+        <strong>Important safety notice</strong>
+        <p>Both models are experimental. A species label cannot confirm the snake, and a bite-area model cannot establish whether venom entered the body. For any suspected snakebite, keep the person still, immobilize the affected limb if possible, remove constricting items if easy, and seek emergency medical care immediately. Do not wait for an AI result.</p>
+        <a href="https://www.who.int/health-topics/snakebite/snakebite" target="_blank" rel="noopener noreferrer">WHO snakebite information ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>SnakeVision AI · Experimental local prototype</span><span>Predictions are estimates. Never approach or handle any snake.</span></footer>
+  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</body>
+</html>

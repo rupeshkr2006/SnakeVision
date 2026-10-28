@@ -1,0 +1,29 @@
+{
+  "bite_class_names": [
+    "Venomous",
+    "Non-Venomous"
+  ],
+  "bite_class_order_verified": true,
+  "bite_input_preprocessing_verified": true,
+  "species_min_confidence": 0.7510674118995666,
+  "species_min_margin": 0.04361115097999573,
+  "species_thresholds_validated": true,
+  "threshold_validation_note": "Thresholds were tuned using only the provided validation snake images and negative controls. The gate is a heuristic, not a true object detector. Use a separate detector and a broader external test set before public use.",
+  "privacy": {
+    "persist_uploads": false,
+    "log_image_contents": false
+  },
+  "threshold_validation_metrics": {
+    "calibrated": true,
+    "minimum_confidence": 0.7510674118995666,
+    "minimum_top_two_margin": 0.04361115097999573,
+    "validation_snake_count": 254,
+    "negative_control_count": 55,
+    "snake_acceptance_rate": 0.7519685039370079,
+    "negative_rejection_rate": 0.9454545454545454,
+    "balanced_accuracy": 0.8487115246957766,
+    "accepted_validation_snakes": 191,
+    "accepted_negative_controls_false_positive_count": 3,
+    "note": "Thresholds were tuned using only the provided validation snake images and negative controls. The gate is a heuristic, not a true object detector. Use a separate detector and a broader external test set before public use."
+  }
+}

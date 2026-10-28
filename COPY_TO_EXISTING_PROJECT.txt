@@ -1,0 +1,10 @@
+COPY/MERGE THIS UPDATE INTO YOUR EXISTING PROJECT:
+D:\snakebite-website
+
+Extract the ZIP contents directly into that folder and allow the provided app.py, templates, static files, requirements.txt, and model/model_config.json to replace/merge with the existing website code.
+
+KEEP your current venv and these model files:
+D:\snakebite-website\model\bite_resnet18.onnx
+D:\snakebite-website\model\final_snake_model.pt
+
+The ZIP deliberately does not contain model weights, the dataset, or your virtual environment.

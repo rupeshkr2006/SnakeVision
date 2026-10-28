@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.DS_Store
+.env.*
+!.env.example
+results/
+*.backup*
+.vercel/
+/validation_samples/negative_controls/
+validation_samples/
