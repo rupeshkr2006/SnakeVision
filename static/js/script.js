@@ -148,6 +148,12 @@
         if (response.status === 413) {
           throw new Error('The hosting service rejected this upload as too large. The images were optimized; try uploading one image at a time or choose smaller photos.');
         }
+        if ([502, 503, 504].includes(response.status)) {
+          throw new Error('SnakeVision is temporarily unable to start the AI service. Wait about 30 seconds and retry. You can also try one image at a time.');
+        }
+        if (response.status >= 500 && /INTERNAL_FUNCTION_INVOCATION_FAILED|FUNCTION_INVOCATION_TIMEOUT|internal server error|application error/i.test(responseText)) {
+          throw new Error('The AI server stopped while processing this request. Please retry once. If it happens again, try the images separately and share the time of the error.');
+        }
         if (!response.ok) {
           throw new Error(`Upload failed (HTTP ${response.status}). ${details}`);
         }
@@ -346,11 +352,16 @@
       const perImageBudget = selectedFiles.length === 1
         ? maxRequestBytes
         : Math.floor(maxRequestBytes / selectedFiles.length);
-      const preparedFiles = await Promise.all(selectedFiles.map(async item => ({
-        field: item.field,
-        originalSize: item.file.size,
-        file: await compressImageForUpload(item.file, perImageBudget),
-      })));
+      const preparedFiles = [];
+      // Compress one image at a time to avoid large simultaneous browser canvases.
+      for (const item of selectedFiles) {
+        const prepared = await compressImageForUpload(item.file, perImageBudget);
+        preparedFiles.push({
+          field: item.field,
+          originalSize: item.file.size,
+          file: prepared,
+        });
+      }
       const preparedTotal = preparedFiles.reduce((total, item) => total + item.file.size, 0);
       if (preparedTotal > maxRequestBytes) {
         throw new Error('The optimized images are still too large to send together. Please upload one image at a time.');
@@ -370,7 +381,9 @@
       progress.textContent = data.safety_notice || 'Analysis complete. Predictions are estimates.';
       resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
-      progress.textContent = error.message || 'Analysis failed. Check the local VS Code terminal.';
+      progress.textContent = error.name === 'TypeError'
+        ? 'Could not reach the SnakeVision server. Check your internet connection and try again.'
+        : (error.message || 'Analysis failed. Please retry once.');
     } finally {
       button.disabled = false;
       button.querySelector('span:first-child').textContent = 'Analyze selected image(s)';
