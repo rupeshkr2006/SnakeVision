@@ -587,6 +587,8 @@ def upload_too_large(_error):
 def handle_unexpected_error(error):
     # Flask's normal HTML error page is not useful to the upload JavaScript.
     if isinstance(error, HTTPException):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": error.description or "The API request could not be completed."}), error.code
         return error
     logger.exception("Unhandled application error")
     if request.path.startswith("/api/"):
