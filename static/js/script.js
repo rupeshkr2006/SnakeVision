@@ -18,6 +18,7 @@
 
   const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
   const maxBytes = 8 * 1024 * 1024;
+  const maxRequestBytes = Math.floor(3.6 * 1024 * 1024);
   const percent = value => `${(Number(value) * 100).toFixed(1)}%`;
 
   function setImage(control, file) {
@@ -73,6 +74,98 @@
       setImage(control, file);
     });
   });
+
+  function canvasToJpeg(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('The browser could not prepare this image for upload. Try another photo.'));
+      }, 'image/jpeg', quality);
+    });
+  }
+
+  async function compressImageForUpload(file, targetBytes) {
+    if (typeof createImageBitmap !== 'function') {
+      throw new Error('This browser cannot safely optimize images for upload. Please use an updated Chrome, Edge, or Firefox browser.');
+    }
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch (_) {
+      throw new Error(`Could not read "${file.name}". Please choose a valid JPG, PNG, WEBP, or BMP image.`);
+    }
+
+    try {
+      const originalMaxSide = Math.max(bitmap.width, bitmap.height);
+      const baseScale = Math.min(1, 1800 / originalMaxSide);
+      const attempts = [
+        { scale: baseScale, quality: 0.86 },
+        { scale: baseScale, quality: 0.78 },
+        { scale: baseScale, quality: 0.70 },
+        { scale: baseScale * 0.85, quality: 0.68 },
+        { scale: baseScale * 0.70, quality: 0.64 },
+        { scale: baseScale * 0.55, quality: 0.60 },
+      ];
+      let blob = null;
+
+      for (const attempt of attempts) {
+        const width = Math.max(1, Math.round(bitmap.width * attempt.scale));
+        const height = Math.max(1, Math.round(bitmap.height * attempt.scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d', { alpha: false });
+        if (!context) throw new Error('Your browser could not prepare this image. Please try another browser.');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, width, height);
+        context.drawImage(bitmap, 0, 0, width, height);
+        blob = await canvasToJpeg(canvas, attempt.quality);
+        if (blob.size <= targetBytes) break;
+      }
+
+      if (!blob || blob.size > targetBytes) {
+        throw new Error(`"${file.name}" is still too large after compression. Please choose a smaller image.`);
+      }
+      const safeBaseName = file.name.replace(/\.[^.]+$/, '') || 'image';
+      return new File([blob], `${safeBaseName}.jpg`, {
+        type: 'image/jpeg',
+        lastModified: Date.now(),
+      });
+    } finally {
+      if (bitmap && typeof bitmap.close === 'function') bitmap.close();
+    }
+  }
+
+  async function readApiResponse(response) {
+    const responseText = await response.text();
+    let data = {};
+
+    if (responseText) {
+      try {
+        data = JSON.parse(responseText);
+      } catch (_) {
+        const details = responseText.replace(/\\s+/g, ' ').trim().slice(0, 160);
+        if (response.status === 413) {
+          throw new Error('The hosting service rejected this upload as too large. The images were optimized; try uploading one image at a time or choose smaller photos.');
+        }
+        if (!response.ok) {
+          throw new Error(`Upload failed (HTTP ${response.status}). ${details}`);
+        }
+        throw new Error('The server returned an unreadable response. Please try again in a moment.');
+      }
+    }
+
+    if (!response.ok) {
+      if (response.status === 413) {
+        throw new Error(data.error || 'The upload is too large. Please choose smaller images or upload one image at a time.');
+      }
+      throw new Error(data.error || data.details || data.message || `Request failed (HTTP ${response.status}).`);
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('The server returned an unexpected response. Please try again.');
+    }
+    return data;
+  }
 
   function fillScoreList(element, items, colorClass = '') {
     element.replaceChildren();
@@ -245,12 +338,32 @@
     clearResults();
 
     try {
+      const selectedFiles = [];
+      if (biteFile) selectedFiles.push({ field: 'bite_image', file: biteFile });
+      if (snakeFile) selectedFiles.push({ field: 'snake_image', file: snakeFile });
+
+      progress.textContent = 'Optimizing selected images for upload…';
+      const perImageBudget = selectedFiles.length === 1
+        ? maxRequestBytes
+        : Math.floor(maxRequestBytes / selectedFiles.length);
+      const preparedFiles = await Promise.all(selectedFiles.map(async item => ({
+        field: item.field,
+        originalSize: item.file.size,
+        file: await compressImageForUpload(item.file, perImageBudget),
+      })));
+      const preparedTotal = preparedFiles.reduce((total, item) => total + item.file.size, 0);
+      if (preparedTotal > maxRequestBytes) {
+        throw new Error('The optimized images are still too large to send together. Please upload one image at a time.');
+      }
+
       const body = new FormData();
-      if (biteFile) body.append('bite_image', biteFile);
-      if (snakeFile) body.append('snake_image', snakeFile);
+      preparedFiles.forEach(item => body.append(item.field, item.file, item.file.name));
+      const originalTotal = preparedFiles.reduce((total, item) => total + item.originalSize, 0);
+      const mb = value => (value / 1024 / 1024).toFixed(2);
+      progress.textContent = `Images prepared (${mb(originalTotal)} MB → ${mb(preparedTotal)} MB). Running analysis…`;
+
       const response = await fetch('/api/predict', { method: 'POST', body, cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || data.details || `Request failed (${response.status})`);
+      const data = await readApiResponse(response);
       displayBite(data.bite_result);
       displaySpecies(data.species_result);
       resultsSection.classList.remove('hidden');
