@@ -268,7 +268,7 @@ def verify_and_open_image(file_storage) -> Image.Image:
             return loaded.convert("RGB")
     except ValueError:
         raise
-    except (UnidentifiedImageError, OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
+    except (UnidentifiedImageError, OSError, SyntaxError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
         raise ValueError("The selected file is not a valid readable image, or its dimensions are unsafe.") from exc
 
 
