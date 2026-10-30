@@ -144,7 +144,7 @@
       try {
         data = JSON.parse(responseText);
       } catch (_) {
-        const details = responseText.replace(/\\s+/g, ' ').trim().slice(0, 160);
+        const details = responseText.replace(/\s+/g, ' ').trim().slice(0, 160);
         if (response.status === 413) {
           throw new Error('The hosting service rejected this upload as too large. The images were optimized; try uploading one image at a time or choose smaller photos.');
         }
