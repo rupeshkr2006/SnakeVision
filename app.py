@@ -1,20 +1,18 @@
 from __future__ import annotations
 
+import gc
 import json
 import logging
 import os
+import threading
 import warnings
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-import onnxruntime as ort
-import torch
-import torch.nn as nn
 from flask import Flask, jsonify, render_template, request
 from PIL import Image, ImageFile, UnidentifiedImageError
-from torchvision import transforms
-from transformers import AutoImageProcessor, AutoModel
+from werkzeug.exceptions import HTTPException
 
 from species_info import FIRST_AID_SOURCES, GENERAL_BITE_FIRST_AID, get_species_info
 
@@ -53,10 +51,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("snakevision")
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_MB * 1024 * 1024
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Heavy ML runtimes are intentionally imported only when the matching model is
+# requested. Importing/loading PyTorch and Transformers at module startup caused
+# Vercel cold-start timeouts and worker SIGKILLs before requests could be served.
 Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 ImageFile.LOAD_TRUNCATED_IMAGES = False
 warnings.simplefilter("error", Image.DecompressionBombWarning)
+
+BITE_LOCK = threading.Lock()
+SPECIES_LOCK = threading.Lock()
+TORCH = None
 
 
 def load_runtime_config() -> dict[str, Any]:
@@ -87,88 +91,151 @@ RUNTIME_CONFIG = load_runtime_config()
 BITE_CLASS_NAMES = [str(x) for x in RUNTIME_CONFIG["bite_class_names"]]
 
 
-class DinoClassifier(nn.Module):
-    """Architecture must match the selected final_snake_model.pt checkpoint."""
-    def __init__(self, num_classes: int):
-        super().__init__()
-        self.backbone = AutoModel.from_pretrained(DINO_MODEL_ID)
-        hidden_size = int(self.backbone.config.hidden_size)
-        self.classifier = nn.Sequential(
-            nn.Dropout(p=0.25),
-            nn.Linear(hidden_size * 2, num_classes),
-        )
-
-    def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
-        outputs = self.backbone(pixel_values=pixel_values)
-        tokens = outputs.last_hidden_state
-        cls_token = tokens[:, 0]
-        patch_mean = tokens[:, 1:].mean(dim=1)
-        return self.classifier(torch.cat([cls_token, patch_mean], dim=1))
-
-
 def load_species_model():
-    if not SPECIES_CHECKPOINT_PATH.is_file():
-        raise FileNotFoundError(f"Species checkpoint not found: {SPECIES_CHECKPOINT_PATH}")
-    checkpoint = torch.load(SPECIES_CHECKPOINT_PATH, map_location="cpu", weights_only=False)
-    if not isinstance(checkpoint, dict):
-        raise ValueError("Unexpected species checkpoint format.")
-    state = checkpoint.get("model_state_dict")
-    class_names = checkpoint.get("class_names")
-    if not isinstance(state, dict) or not class_names:
-        raise ValueError("Checkpoint must contain model_state_dict and class_names.")
-    class_names = [str(name) for name in class_names]
-    if len(class_names) != 13:
-        logger.warning("Expected 13 species classes; checkpoint has %d", len(class_names))
-    model_id = checkpoint.get("model_id", DINO_MODEL_ID)
-    if model_id != DINO_MODEL_ID:
-        logger.warning("Checkpoint model_id=%r; app expects %r", model_id, DINO_MODEL_ID)
-    model = DinoClassifier(num_classes=len(class_names))
-    state = {key.removeprefix("module."): value for key, value in state.items()}
-    model.load_state_dict(state, strict=True)
-    model.to(DEVICE).eval()
-    processor = AutoImageProcessor.from_pretrained(DINO_MODEL_ID)
-    image_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(IMAGE_SIZE),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
-    ])
-    return model, class_names, image_transform
+    """Load DINOv2 on demand; never download the base model weights twice."""
+    global species_model, species_classes, species_transform, SPECIES_MODEL_ERROR, TORCH
+
+    if species_model is not None:
+        return species_model, species_classes, species_transform, TORCH
+
+    with SPECIES_LOCK:
+        if species_model is not None:
+            return species_model, species_classes, species_transform, TORCH
+        if not SPECIES_CHECKPOINT_PATH.is_file():
+            raise FileNotFoundError("Species checkpoint is not present in this deployment.")
+
+        try:
+            # Keep ML imports out of the Flask cold-start path.
+            import torch
+            from torchvision import transforms
+            from transformers import AutoConfig, AutoImageProcessor, AutoModel
+
+            torch.set_num_threads(1)
+            try:
+                torch.set_num_interop_threads(1)
+            except RuntimeError:
+                pass
+
+            checkpoint = torch.load(
+                SPECIES_CHECKPOINT_PATH,
+                map_location="cpu",
+                weights_only=True,
+            )
+            if not isinstance(checkpoint, dict):
+                raise ValueError("Unexpected species checkpoint format.")
+            state = checkpoint.get("model_state_dict")
+            class_names = checkpoint.get("class_names")
+            if not isinstance(state, dict) or not class_names:
+                raise ValueError("Checkpoint must contain model_state_dict and class_names.")
+            class_names = [str(name) for name in class_names]
+            if len(class_names) != 13:
+                logger.warning("Expected 13 species classes; checkpoint has %d", len(class_names))
+
+            model_id = checkpoint.get("model_id", DINO_MODEL_ID)
+            if model_id != DINO_MODEL_ID:
+                logger.warning("Checkpoint model_id=%r; app expects %r", model_id, DINO_MODEL_ID)
+
+            # The trained checkpoint already contains the backbone weights.
+            # Build only the architecture from the small config file, rather than
+            # loading a second full set of pretrained weights from Hugging Face.
+            backbone_config = AutoConfig.from_pretrained(DINO_MODEL_ID)
+            backbone = AutoModel.from_config(backbone_config)
+
+            class DinoClassifier(torch.nn.Module):
+                def __init__(self, backbone_model, num_classes: int):
+                    super().__init__()
+                    self.backbone = backbone_model
+                    hidden_size = int(self.backbone.config.hidden_size)
+                    self.classifier = torch.nn.Sequential(
+                        torch.nn.Dropout(p=0.25),
+                        torch.nn.Linear(hidden_size * 2, num_classes),
+                    )
+
+                def forward(self, pixel_values):
+                    outputs = self.backbone(pixel_values=pixel_values)
+                    tokens = outputs.last_hidden_state
+                    cls_token = tokens[:, 0]
+                    patch_mean = tokens[:, 1:].mean(dim=1)
+                    return self.classifier(torch.cat([cls_token, patch_mean], dim=1))
+
+            model = DinoClassifier(backbone, num_classes=len(class_names))
+            state = {key.removeprefix("module."): value for key, value in state.items()}
+            model.load_state_dict(state, strict=True)
+            del state, checkpoint, backbone, backbone_config
+            gc.collect()
+
+            model.to("cpu").eval()
+            processor = AutoImageProcessor.from_pretrained(DINO_MODEL_ID)
+            image_transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(IMAGE_SIZE),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=processor.image_mean, std=processor.image_std),
+            ])
+
+            TORCH = torch
+            species_model = model
+            species_classes = class_names
+            species_transform = image_transform
+            SPECIES_MODEL_ERROR = None
+            logger.info("DINOv2 species model initialized on demand (%d classes).", len(class_names))
+            return species_model, species_classes, species_transform, TORCH
+        except Exception as exc:
+            SPECIES_MODEL_ERROR = f"{type(exc).__name__}: {exc}"
+            logger.exception("Species model initialization failed")
+            raise RuntimeError(
+                "The snake-species model could not start. Please retry once; if it happens again, use the bite-area image by itself and report this error."
+            ) from exc
 
 
 def load_bite_session():
-    if not BITE_ONNX_PATH.is_file():
-        raise FileNotFoundError(f"Bite ONNX model not found: {BITE_ONNX_PATH}")
-    options = ort.SessionOptions()
-    options.log_severity_level = 3
-    session = ort.InferenceSession(
-        str(BITE_ONNX_PATH), sess_options=options, providers=["CPUExecutionProvider"]
-    )
-    if not session.get_inputs() or not session.get_outputs():
-        raise ValueError("ONNX model has no visible input/output tensors.")
-    inp, out = session.get_inputs()[0], session.get_outputs()[0]
-    logger.info("Bite ONNX input %s shape=%s type=%s", inp.name, inp.shape, inp.type)
-    logger.info("Bite ONNX output %s shape=%s type=%s", out.name, out.shape, out.type)
-    return session
+    """Load the smaller ONNX model only when a bite-area photo is submitted."""
+    global bite_session, BITE_MODEL_ERROR
+
+    if bite_session is not None:
+        return bite_session
+
+    with BITE_LOCK:
+        if bite_session is not None:
+            return bite_session
+        if not BITE_ONNX_PATH.is_file():
+            raise FileNotFoundError("Bite-image ONNX model is not present in this deployment.")
+
+        try:
+            import onnxruntime as ort
+
+            options = ort.SessionOptions()
+            options.log_severity_level = 3
+            options.intra_op_num_threads = 1
+            options.inter_op_num_threads = 1
+            session = ort.InferenceSession(
+                str(BITE_ONNX_PATH),
+                sess_options=options,
+                providers=["CPUExecutionProvider"],
+            )
+            if not session.get_inputs() or not session.get_outputs():
+                raise ValueError("ONNX model has no visible input/output tensors.")
+            inp, out = session.get_inputs()[0], session.get_outputs()[0]
+            logger.info("Bite ONNX input %s shape=%s type=%s", inp.name, inp.shape, inp.type)
+            logger.info("Bite ONNX output %s shape=%s type=%s", out.name, out.shape, out.type)
+            bite_session = session
+            BITE_MODEL_ERROR = None
+            return bite_session
+        except Exception as exc:
+            BITE_MODEL_ERROR = f"{type(exc).__name__}: {exc}"
+            logger.exception("Bite model initialization failed")
+            raise RuntimeError(
+                "The bite-area model could not start. Please retry once or upload a smaller image."
+            ) from exc
 
 
-# Load independently: a problem with one model should not block the other model.
+# Models are not initialized during Flask import/cold start.
 bite_session = None
 species_model = None
 species_classes: list[str] = []
 species_transform = None
 BITE_MODEL_ERROR = None
 SPECIES_MODEL_ERROR = None
-try:
-    bite_session = load_bite_session()
-except Exception as exc:
-    BITE_MODEL_ERROR = f"{type(exc).__name__}: {exc}"
-    logger.exception("Bite model failed to load")
-try:
-    species_model, species_classes, species_transform = load_species_model()
-except Exception as exc:
-    SPECIES_MODEL_ERROR = f"{type(exc).__name__}: {exc}"
-    logger.exception("Species model failed to load")
 
 
 def verify_and_open_image(file_storage) -> Image.Image:
@@ -250,10 +317,9 @@ def predict_bite_image(image: Image.Image) -> dict[str, Any]:
     the graph. The MATLAB model author should verify this before public release.
     It cannot diagnose envenoming.
     """
-    if bite_session is None:
-        raise RuntimeError("The ONNX bite-image model is not available.")
-    inp = bite_session.get_inputs()[0]
-    out = bite_session.get_outputs()[0]
+    session = load_bite_session()
+    inp = session.get_inputs()[0]
+    out = session.get_outputs()[0]
     shape = inp.shape
     if len(shape) != 4:
         raise RuntimeError(f"Expected a 4-D NCHW ONNX input; got {shape}.")
@@ -262,7 +328,7 @@ def predict_bite_image(image: Image.Image) -> dict[str, Any]:
     resized = image.resize((width, height), Image.Resampling.BILINEAR)
     pixels = np.asarray(resized, dtype=np.float32)
     tensor = np.transpose(pixels, (2, 0, 1))[None, ...]
-    raw = bite_session.run([out.name], {inp.name: tensor})[0]
+    raw = session.run([out.name], {inp.name: tensor})[0]
     probabilities = softmax_or_probabilities(raw)
     if len(probabilities) != len(BITE_CLASS_NAMES):
         raise RuntimeError("Unexpected ONNX output size; verify output classes and MATLAB export.")
@@ -304,16 +370,15 @@ def predict_bite_image(image: Image.Image) -> dict[str, Any]:
 
 def predict_species_scores(image: Image.Image) -> dict[str, Any]:
     """Raw closed-set scores for a snake photo. No proof of snake presence is implied."""
-    if species_model is None or species_transform is None:
-        raise RuntimeError("The snake-species model is not available.")
-    tensor = species_transform(image).unsqueeze(0).to(DEVICE)
+    model, class_names, image_transform, torch = load_species_model()
+    tensor = image_transform(image).unsqueeze(0)
     with torch.inference_mode():
-        logits = species_model(tensor)
+        logits = model(tensor)
         probs = torch.softmax(logits, dim=1)[0]
-    top_scores, top_indices = torch.topk(probs, k=min(3, len(species_classes)))
+    top_scores, top_indices = torch.topk(probs, k=min(3, len(class_names)))
     scores = [float(x) for x in top_scores.tolist()]
     indices = [int(x) for x in top_indices.tolist()]
-    top_label = species_classes[indices[0]]
+    top_label = class_names[indices[0]]
     margin = scores[0] - (scores[1] if len(scores) > 1 else 0.0)
     quality = image_quality_notes(image)
     confidence_threshold = float(RUNTIME_CONFIG.get("species_min_confidence", 0.50))
@@ -326,7 +391,7 @@ def predict_species_scores(image: Image.Image) -> dict[str, Any]:
     uncertain = low_confidence or severe_quality_issue
     threshold_validated = bool(RUNTIME_CONFIG.get("species_thresholds_validated", False))
     top_predictions = [
-        {"label": species_classes[i], "score": score}
+        {"label": class_names[i], "score": score}
         for i, score in zip(indices, scores)
     ]
     warnings_out = list(quality["warnings"])
@@ -382,6 +447,7 @@ def model_diagnostics() -> dict[str, Any]:
         bite_outputs = [{"name": out.name, "shape": out.shape, "type": out.type} for out in bite_session.get_outputs()]
     return {
         "bite_model": {
+            "available": BITE_ONNX_PATH.is_file(),
             "loaded": bite_session is not None,
             "file": BITE_ONNX_PATH.name,
             "input": bite_input,
@@ -392,15 +458,18 @@ def model_diagnostics() -> dict[str, Any]:
             "error_type": (BITE_MODEL_ERROR.split(":", 1)[0] if BITE_MODEL_ERROR else None),
         },
         "species_model": {
+            "available": SPECIES_CHECKPOINT_PATH.is_file(),
             "loaded": species_model is not None,
             "file": SPECIES_CHECKPOINT_PATH.name,
             "classes": species_classes,
             "count": len(species_classes),
+            "expected_class_count": 13,
             "minimum_confidence": RUNTIME_CONFIG.get("species_min_confidence"),
             "minimum_top_two_margin": RUNTIME_CONFIG.get("species_min_margin"),
             "thresholds_validated": bool(RUNTIME_CONFIG.get("species_thresholds_validated", False)),
             "error_type": (SPECIES_MODEL_ERROR.split(":", 1)[0] if SPECIES_MODEL_ERROR else None),
         },
+        "model_loading": "Models load on first use, not during server startup.",
         "privacy": "Uploaded images are decoded and processed in memory; this app does not intentionally save uploaded images.",
     }
 
@@ -419,8 +488,8 @@ def add_safety_headers(response):
 def home():
     return render_template(
         "index.html",
-        bite_model_ready=(bite_session is not None),
-        species_model_ready=(species_model is not None),
+        bite_model_ready=BITE_ONNX_PATH.is_file(),
+        species_model_ready=SPECIES_CHECKPOINT_PATH.is_file(),
         model_config=RUNTIME_CONFIG,
         diagnostics=model_diagnostics(),
     )
@@ -428,45 +497,68 @@ def home():
 
 @app.get("/health")
 def health():
-    bite_ready = bite_session is not None
-    species_ready = species_model is not None
-    ready = bite_ready or species_ready
+    bite_available = BITE_ONNX_PATH.is_file()
+    species_available = SPECIES_CHECKPOINT_PATH.is_file()
+    ready = bite_available or species_available
     return jsonify({
-        "status": "ok" if bite_ready and species_ready else ("partial" if ready else "model_load_error"),
-        "device": str(DEVICE),
-        "bite_model_loaded": bite_ready,
-        "species_model_loaded": species_ready,
+        "status": "ok" if bite_available and species_available else ("partial" if ready else "model_files_missing"),
+        "device": "cpu",
+        "bite_model_available": bite_available,
+        "species_model_available": species_available,
+        "bite_model_loaded": bite_session is not None,
+        "species_model_loaded": species_model is not None,
         "species_count": len(species_classes),
+        "model_loading": "on-demand",
     }), (200 if ready else 503)
 
 
 @app.get("/api/diagnostics")
 def diagnostics():
     """Development diagnostic endpoint; does not expose local filesystem paths or tracebacks."""
-    return jsonify(model_diagnostics()), (200 if (bite_session is not None or species_model is not None) else 503)
+    details = model_diagnostics()
+    available = details["bite_model"]["available"] or details["species_model"]["available"]
+    return jsonify(details), (200 if available else 503)
 
 
 @app.post("/api/predict")
 def api_predict():
-    bite_file = request.files.get("bite_image")
-    snake_file = request.files.get("snake_image")
-    has_bite = bool(bite_file and bite_file.filename)
-    has_snake = bool(snake_file and snake_file.filename)
-    if not has_bite and not has_snake:
-        return jsonify({"error": "Upload a bite-area photo, a snake photo, or both in their separate boxes."}), 400
-    if has_bite and bite_session is None:
-        return jsonify({"error": "Bite-image model is not available. Check local model configuration and server logs."}), 503
-    if has_snake and species_model is None:
-        return jsonify({"error": "Snake-species model is not available. Check local model configuration and server logs."}), 503
     try:
+        bite_file = request.files.get("bite_image")
+        snake_file = request.files.get("snake_image")
+        has_bite = bool(bite_file and bite_file.filename)
+        has_snake = bool(snake_file and snake_file.filename)
+        if not has_bite and not has_snake:
+            return jsonify({"error": "Upload a bite-area photo, a snake photo, or both in their separate boxes."}), 400
+        if has_bite and not BITE_ONNX_PATH.is_file():
+            return jsonify({"error": "The bite-area model file is missing from the server deployment."}), 503
+        if has_snake and not SPECIES_CHECKPOINT_PATH.is_file():
+            return jsonify({"error": "The snake-species model file is missing from the server deployment."}), 503
+
         bite_result = None
         species_result = None
+
+        # Run one model at a time. Each loader is lazy and CPU-thread limited,
+        # reducing peak cold-start and inference memory on serverless workers.
         if has_bite:
             bite_image = verify_and_open_image(bite_file)
-            bite_result = {"image_size": {"width": bite_image.width, "height": bite_image.height}, **predict_bite_image(bite_image)}
+            try:
+                bite_result = {
+                    "image_size": {"width": bite_image.width, "height": bite_image.height},
+                    **predict_bite_image(bite_image),
+                }
+            finally:
+                bite_image.close()
+
         if has_snake:
             snake_image = verify_and_open_image(snake_file)
-            species_result = {"image_size": {"width": snake_image.width, "height": snake_image.height}, **predict_species_image(snake_image)}
+            try:
+                species_result = {
+                    "image_size": {"width": snake_image.width, "height": snake_image.height},
+                    **predict_species_image(snake_image),
+                }
+            finally:
+                snake_image.close()
+
         return jsonify({
             "success": True,
             "bite_result": bite_result,
@@ -478,9 +570,12 @@ def api_predict():
         })
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
-    except Exception:
+    except Exception as exc:
         logger.exception("Prediction failed")
-        return jsonify({"error": "Prediction failed. The uploaded image may be unsupported or model inference failed. Check the local server terminal for details."}), 500
+        message = str(exc).strip()
+        if not message or len(message) > 240:
+            message = "The AI model could not complete this request. Please retry with one image at a time."
+        return jsonify({"error": message}), 500
 
 
 @app.errorhandler(413)
@@ -488,12 +583,25 @@ def upload_too_large(_error):
     return jsonify({"error": f"The total request is limited to {MAX_UPLOAD_MB} MB; each image must be no larger than {MAX_IMAGE_MB} MB."}), 413
 
 
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    # Flask's normal HTML error page is not useful to the upload JavaScript.
+    if isinstance(error, HTTPException):
+        return error
+    logger.exception("Unhandled application error")
+    if request.path.startswith("/api/"):
+        return jsonify({
+            "error": "The server encountered an unexpected processing error. Please retry with one image at a time. If it continues, share the time of the error with the project maintainer."
+        }), 500
+    return "SnakeVision could not complete this page request. Please refresh and try again.", 500
+
+
 if __name__ == "__main__":
     print("\nSnakeVision AI — local development")
     print(f"Project folder: {BASE_DIR}")
-    print(f"Device: {DEVICE}")
-    print(f"Bite model: {'READY' if bite_session is not None else BITE_MODEL_ERROR}")
-    print(f"Species model: {'READY' if species_model is not None else SPECIES_MODEL_ERROR}")
+    print("Device: CPU (models load on demand)")
+    print(f"Bite model file: {'READY' if BITE_ONNX_PATH.is_file() else 'MISSING'}")
+    print(f"Species model file: {'READY' if SPECIES_CHECKPOINT_PATH.is_file() else 'MISSING'}")
     print("Uploaded images are processed in memory, not saved by this app.")
     print("Open http://127.0.0.1:5000 after the server starts.\n")
     app.run(host="127.0.0.1", port=int(os.environ.get("PORT", "5000")), debug=False)
