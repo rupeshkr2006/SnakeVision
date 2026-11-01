@@ -302,6 +302,8 @@
       document.getElementById('species-summary').textContent = info.summary || '';
       fillList(document.getElementById('species-precautions'), info.precautions || []);
       fillSources(document.getElementById('species-sources'), info.sources || []);
+      // Show the species-specific precautions already returned for this exact predicted class.
+      // The prediction remains uncertain unless the model's confidence gate is passed.
       precautionsWrap.querySelector('h4').textContent = 'Precautions for the predicted species';
     }
   }
