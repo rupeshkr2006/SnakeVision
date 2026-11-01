@@ -39,3 +39,5 @@
 .site-header .language-button{cursor:pointer}
 .site-header .language-button.active{font-weight:700;outline:2px solid currentColor;outline-offset:1px}
 @media(max-width:640px){.header-actions{align-items:flex-start;flex-direction:column;gap:8px}.site-header{gap:10px;align-items:flex-start}}
+
+.clinical-profile{margin:16px 0;padding:14px 16px;border:1px solid #d9e4df;border-radius:12px;background:#f7faf8}.clinical-profile h4{margin:0 0 8px}.clinical-profile p{margin:0;line-height:1.65}
