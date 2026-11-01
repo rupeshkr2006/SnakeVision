@@ -34,6 +34,20 @@
       </div>
     </section>
 
+    <section class="emergency-tools" aria-labelledby="emergency-tools-title">
+      <div class="emergency-tools-copy">
+        <h2 id="emergency-tools-title">Find the nearest hospital</h2>
+        <p id="emergency-tools-description">Tap the button and allow location access. SnakeVision will open nearby hospitals on Google Maps using your current location.</p>
+      </div>
+      <div class="emergency-tools-actions">
+        <button type="button" id="find-hospital-button" class="emergency-button">📍 Find nearest hospital</button>
+        <a class="emergency-call-button" href="tel:112">Call 112 emergency</a>
+      </div>
+      <p id="location-status" class="location-status" role="status" aria-live="polite">Your location is only requested after you press the button.</p>
+      <a id="hospital-map-link" class="hospital-map-link hidden" target="_blank" rel="noopener noreferrer">Open nearby hospitals in Google Maps ↗</a>
+      <small id="location-privacy-note">Your browser asks permission before sharing location. Location is used to create the map search link and is not sent to the SnakeVision server.</small>
+    </section>
+
     {% if not bite_model_ready or not species_model_ready %}
     <section class="error-banner">
       <strong>One or more model files could not be loaded.</strong>
