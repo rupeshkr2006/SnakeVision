@@ -41,3 +41,16 @@
 @media(max-width:640px){.header-actions{align-items:flex-start;flex-direction:column;gap:8px}.site-header{gap:10px;align-items:flex-start}}
 
 .clinical-profile{margin:16px 0;padding:14px 16px;border:1px solid #d9e4df;border-radius:12px;background:#f7faf8}.clinical-profile h4{margin:0 0 8px}.clinical-profile p{margin:0;line-height:1.65}
+
+.emergency-tools{margin:0 0 22px;padding:20px;background:#fff;border:1px solid #e7c7c2;border-radius:16px;box-shadow:var(--shadow)}
+.emergency-tools-copy h2{margin:0 0 5px;font-size:17px;color:#8f2525}
+.emergency-tools-copy p{margin:0;color:var(--muted);font-size:12px}
+.emergency-tools-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.emergency-button,.emergency-call-button{display:inline-flex;align-items:center;justify-content:center;min-height:43px;padding:10px 15px;border:0;border-radius:10px;font-size:12px;font-weight:850;text-decoration:none;cursor:pointer}
+.emergency-button{background:#a33232;color:#fff}
+.emergency-button:hover{background:#842626}
+.emergency-call-button{background:#fff0ee;color:#8f2525;border:1px solid #e8b8b1}
+.location-status{margin:12px 0 5px;color:#46554c;font-size:11px}
+.hospital-map-link{display:inline-block;margin:4px 0;color:#176b49;font-size:12px;font-weight:850}
+.emergency-tools small{display:block;margin-top:8px;color:var(--muted);font-size:10px}
+@media(max-width:480px){.emergency-tools{padding:15px}.emergency-tools-actions>*{width:100%}}
