@@ -109,6 +109,7 @@
       document.getElementById('species-uncertain-reason').textContent=currentLanguage==='te'?'మోడల్ స్కోరు '+percent(result.confidence)+', మొదటి రెండు అంచనాల మధ్య తేడా '+percent(result.top_two_margin)+'. నమ్మకమైన గుర్తింపుగా ఈ ఫలితాన్ని చూపడం లేదు.':(currentLanguage==='hi'?'शीर्ष स्कोर '+percent(result.confidence)+' और पहले दो अनुमानों का अंतर '+percent(result.top_two_margin)+' है। इसे पक्की पहचान नहीं माना जा रहा है.':'The top score is '+percent(result.confidence)+' and the top-two score margin is '+percent(result.top_two_margin)+'. This is not a confident identification.');
       document.getElementById('species-candidate').textContent=currentLanguage==='te'?'అంచనా మాత్రమే (ధృవీకరించబడలేదు): '+(result.candidate_label||'తెలియదు'):(currentLanguage==='hi'?'संभावित नाम (पुष्टि नहीं): '+(result.candidate_label||'अज्ञात'):'Top candidate (not confirmed): '+(result.candidate_label||'unknown'));
       document.getElementById('species-uncertain-banner').querySelector('strong').textContent=t.uncertainTitle;
+      document.getElementById('species-label').textContent=t.uncertainTitle;
       document.getElementById('species-status').textContent=t.speciesUnknown;
       document.getElementById('species-summary').textContent=t.unknownSummary;
       document.getElementById('species-precautions-wrap').querySelector('h4').textContent=t.uncertainPrecautions;
@@ -355,7 +356,8 @@
     if (!result.class_mapping_verified) {
       heading = `Unverified mapping — output class ${result.class_index} (proposed label: ${result.proposed_label})`;
     }
-    document.getElementById('bite-label').textContent = heading;
+    const biteDisplayLabel = currentLanguage==='te' ? (result.proposed_label==='Venomous'?'విషపూరితమైనది':(result.proposed_label==='Non-Venomous'?'విషరహితం':result.proposed_label)) : (currentLanguage==='hi' ? (result.proposed_label==='Venomous'?'विषैला':(result.proposed_label==='Non-Venomous'?'विषहीन':result.proposed_label)) : (result.proposed_label||result.label));
+    document.getElementById('bite-label').textContent = !result.class_mapping_verified ? heading : ((currentLanguage==='en'?'Model output: ':currentLanguage==='te'?'మోడల్ ఫలితం: ':'मॉडल परिणाम: ')+biteDisplayLabel);
     document.getElementById('bite-confidence').textContent = percent(result.confidence);
     fillScoreList(document.getElementById('bite-scores'), result.probabilities);
     document.getElementById('bite-medical-warning').textContent = result.medical_warning;
