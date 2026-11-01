@@ -364,6 +364,23 @@ def predict_bite_image(image: Image.Image) -> dict[str, Any]:
             "snakebite, seek emergency medical care immediately; do not wait for this result."
         ),
         "first_aid": GENERAL_BITE_FIRST_AID,
+        "bite_specific_guidance": {
+            "title": "Bite-specific warning signs",
+            "urgent_signs": [
+                "Pain, rapidly increasing swelling, bruising, blistering, or discoloration around the bite.",
+                "Oozing or bleeding from the bite, gums, nose, urine, or another site.",
+                "Drooping eyelids, double or blurred vision, difficulty speaking or swallowing, neck weakness, or weakness spreading to the limbs.",
+                "Difficulty breathing, faintness, confusion, collapse, cold/clammy skin, or signs of shock.",
+                "Severe abdominal pain or vomiting after a suspected bite. Krait bites may have little visible local injury and symptoms can be delayed."
+            ],
+            "action": "Any suspected snakebite needs immediate emergency transport and hospital assessment, even when the bite mark looks small or the patient initially feels well. Do not wait for symptoms or an AI result.",
+            "do_not": [
+                "Do not cut, suck, squeeze, massage, ice, burn, or apply herbal/chemical substances to the bite.",
+                "Do not apply a tight tourniquet. Pressure-immobilization is not a universal method; follow trained local medical guidance.",
+                "Do not let the patient walk; keep them still and splint the bitten limb."
+            ],
+            "clinical_note": "This is a symptom-awareness checklist, not a diagnosis, severity score, or treatment protocol. Only clinicians can assess envenoming and decide on antivenom and supportive care."
+        },
         "sources": FIRST_AID_SOURCES,
     }
 
@@ -424,6 +441,13 @@ def predict_species_scores(image: Image.Image) -> dict[str, Any]:
         },
         "top_predictions": top_predictions,
         "species_info": species_info,
+        "time_to_death_estimate": None,
+        "survival_warning": (
+            "Survival time cannot be predicted from a snake photograph, predicted species, or model score. "
+            "Venom dose, whether venom was injected, bite location, patient factors, and treatment access "
+            "all change outcomes. Never display a countdown or estimated hours-to-death. Any suspected "
+            "bite requires immediate emergency medical care."
+        ),
         "warnings": warnings_out,
         "quality": quality,
         "notice": (
