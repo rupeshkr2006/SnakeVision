@@ -102,11 +102,11 @@
           </div>
 
           <div class="warning-callout urgent-callout">
-          <div class="warning-callout urgent-callout">
-            <strong id="bite-survival-heading" data-page-i18n="biteSurvivalHeading">Can this model estimate survival time after a bite?</strong>
-            <p id="bite-survival-text" data-page-i18n="biteSurvivalText">No. The bite-area image model only classifies the uploaded image. It cannot tell whether a snake bite occurred, whether venom entered the body, how much venom was injected, or how quickly a patient may deteriorate. There is no reliable survival-time estimate from this result. If a bite is suspected, get emergency medical care immediately.</p>
+            <strong id="bite-survival-heading" data-page-i18n="biteSurvivalHeading">Can the bite-area model estimate survival time?</strong>
+            <p id="bite-survival-text" data-page-i18n="biteSurvivalText">No. It scores the uploaded image only. It cannot confirm a bite, venom injection, venom dose or patient condition. It cannot estimate survival time. If a bite is suspected, go to a hospital immediately.</p>
           </div>
 
+          <div class="warning-callout urgent-callout">
             <strong id="bite-guidance-title">Bite-specific warning signs</strong>
             <p id="bite-guidance-action"></p>
             <h4 data-i18n="symptomsHeading">Emergency symptoms to watch for</h4>
@@ -131,6 +131,10 @@
           <div class="score-list" id="species-scores"></div>
           
           <p id="species-summary" class="species-summary"></p>
+          <div id="species-clinical-wrap" class="clinical-profile">
+            <h4 data-page-i18n="clinicalProfileHeading">Typical medical effects if envenoming occurs</h4>
+            <p id="species-clinical-text"></p>
+          </div>
           <div class="warning-callout urgent-callout">
             <strong data-i18n="speciesUrgencyTitle">Snake photo is not a patient risk assessment</strong>
             <p data-i18n="speciesUrgencyText">If a person may have been bitten, seek emergency care now regardless of the predicted species or visible symptoms.</p>
@@ -142,7 +146,7 @@
             <div id="species-sources" class="source-links"></div>
           </div>
           <p id="species-notice" class="result-footnote"></p>
-          <div class="warning-callout urgent-callout"><strong id="species-survival-heading" data-page-i18n="survivalHeading">If this snake bites someone</strong><p id="species-survival-text" data-page-i18n="survivalText">A reliable survival time cannot be estimated from a snake photo or species label. The outcome depends on the bite and the patient\’s condition and treatment. Treat every suspected bite as an emergency and go to a hospital immediately.</p></div>
+          <div class="warning-callout urgent-callout"><strong id="species-survival-heading" data-page-i18n="clinicalProfileNote">No reliable survival-time estimate</strong><p id="species-survival-text" data-page-i18n="clinicalProfileNoteText">There is no reliable survival-time countdown from a species label. Symptoms can be delayed; suspected bites need immediate hospital assessment.</p></div>
         </article>
       </div>
     </section>
