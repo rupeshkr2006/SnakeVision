@@ -249,6 +249,12 @@
     fillScoreList(document.getElementById('bite-scores'), result.probabilities);
     document.getElementById('bite-medical-warning').textContent = result.medical_warning;
     fillList(document.getElementById('first-aid-list'), result.first_aid);
+    const biteGuidance = result.bite_specific_guidance || {};
+    document.getElementById('bite-guidance-title').textContent = biteGuidance.title || 'Bite-specific warning signs';
+    document.getElementById('bite-guidance-action').textContent = biteGuidance.action || 'Any suspected snakebite needs immediate emergency medical care. Do not wait for this AI result.';
+    fillList(document.getElementById('bite-urgent-signs'), biteGuidance.urgent_signs || []);
+    fillList(document.getElementById('bite-do-not'), biteGuidance.do_not || []);
+    document.getElementById('bite-clinical-note').textContent = biteGuidance.clinical_note || 'This is not a diagnosis or treatment plan.';
     displayWarnings('bite-warnings', 'bite-warning-list', result.warnings);
     fillSources(document.getElementById('bite-sources'), result.sources);
   }
@@ -261,6 +267,8 @@
     document.getElementById('species-confidence').textContent = percent(result.confidence);
     fillScoreList(document.getElementById('species-scores'), result.top_predictions, 'purple');
     document.getElementById('species-notice').textContent = result.notice || '';
+    document.getElementById('species-survival-warning').textContent = result.survival_warning ||
+      'Survival time cannot be predicted from a photo or model score. Any suspected bite needs immediate emergency medical care.';
     displayWarnings('species-warnings', 'species-warning-list', result.warnings);
 
     const uncertaintyBanner = document.getElementById('species-uncertain-banner');
