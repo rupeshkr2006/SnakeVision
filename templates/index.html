@@ -84,7 +84,15 @@
     </form>
 
     <section id="results-section" class="results-section hidden" aria-live="polite">
-      <div class="results-heading"><div><div class="eyebrow">ANALYSIS</div><h2>Results and precautions</h2></div></div>
+      <div class="results-heading results-heading-localized">
+        <div><div class="eyebrow" data-i18n="analysis">ANALYSIS</div><h2 data-i18n="resultsTitle">Results and precautions</h2></div>
+        <div class="language-switch" role="group" aria-label="Choose language">
+          <span data-i18n="languageLabel">Language</span>
+          <button type="button" class="language-button active" data-language="en" aria-pressed="true">English</button>
+          <button type="button" class="language-button" data-language="te" aria-pressed="false">తెలుగు</button>
+          <button type="button" class="language-button" data-language="hi" aria-pressed="false">हिंदी</button>
+        </div>
+      </div>
       <div class="result-grid">
         <article id="bite-result-card" class="result-card hidden">
           <div class="result-card-head"><span class="result-icon">01</span><span class="result-label">ONNX · BITE-AREA IMAGE SCORE</span></div>
@@ -94,15 +102,20 @@
           <div id="bite-warnings" class="warning-callout hidden"><strong>Verification / quality warnings</strong><ul id="bite-warning-list" class="precaution-list"></ul></div>
           <div class="warning-callout urgent-callout"><strong>Not a medical diagnosis</strong><p id="bite-medical-warning"></p></div>
           <div class="warning-callout urgent-callout">
+            <strong data-i18n="biteUrgencyTitle">TIME-CRITICAL: suspected bite — emergency care NOW</strong>
+            <p id="bite-urgency-text">Leave for the nearest emergency-capable hospital immediately. Do not wait for swelling, pain, weakness, or this AI result.</p>
+          </div>
+
+          <div class="warning-callout urgent-callout">
             <strong id="bite-guidance-title">Bite-specific warning signs</strong>
             <p id="bite-guidance-action"></p>
-            <h4>Emergency symptoms to watch for</h4>
+            <h4 data-i18n="symptomsHeading">Emergency symptoms to watch for</h4>
             <ul id="bite-urgent-signs" class="precaution-list"></ul>
-            <h4>Do not do these things</h4>
+            <h4 data-i18n="dontHeading">Do not do these things</h4>
             <ul id="bite-do-not" class="precaution-list"></ul>
             <p id="bite-clinical-note" class="result-footnote"></p>
           </div>
-          <h4>Immediate first aid while arranging transport</h4>
+          <h4 data-i18n="firstAidHeading">Immediate first aid while arranging transport</h4>
           <ul id="first-aid-list" class="precaution-list"></ul>
           <div id="bite-sources" class="source-links"></div>
         </article>
@@ -118,15 +131,20 @@
           <div class="score-list" id="species-scores"></div>
           <div id="species-warnings" class="warning-callout hidden"><strong>Image and model warnings</strong><ul id="species-warning-list" class="precaution-list"></ul></div>
           <p id="species-summary" class="species-summary"></p>
+          <div class="warning-callout urgent-callout">
+            <strong data-i18n="speciesUrgencyTitle">Snake photo is not a patient risk assessment</strong>
+            <p data-i18n="speciesUrgencyText">If a person may have been bitten, seek emergency care now regardless of the predicted species or visible symptoms.</p>
+          </div>
+
           <div id="species-precautions-wrap">
-            <h4>Precautions for the predicted species</h4>
+            <h4 data-i18n="speciesPrecautionsHeading">Precautions for the predicted species</h4>
             <ul id="species-precautions" class="precaution-list"></ul>
             <div id="species-sources" class="source-links"></div>
           </div>
           <p id="species-notice" class="result-footnote"></p>
           <div class="warning-callout urgent-callout">
-            <strong>Patient survival time cannot be estimated</strong>
-            <p id="species-survival-warning">A photo or species prediction cannot determine whether venom was injected or predict an individual's survival time. Any suspected bite is an emergency; go to a hospital immediately.</p>
+            <strong data-i18n="urgencyTitle">TIME-CRITICAL: go to a hospital NOW</strong>
+            <p id="species-survival-warning">A photograph cannot predict survival time or show whether venom was injected. Do not wait for symptoms or an AI result. Immediate hospital assessment gives the patient the best chance of effective treatment.</p>
           </div>
         </article>
       </div>
