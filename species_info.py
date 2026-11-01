@@ -50,6 +50,7 @@ SPECIES_INFO = {
         ],
         "sources": [
             {"label": "Government of India — National Action Plan for Snakebite Envenoming", "url": "https://www.ncdc.mohfw.gov.in/wp-content/uploads/2024/07/NATIONAL-ACTION-PLAN-FOR-PREVENTION-AND-CONTROL-OF-SNAKEBITE-ENVENOMING-NAPSE.pdf"},
+    {"label": "Government of India — Standard Treatment Guidelines for Management of Snakebite (24-hour observation)", "url": "https://ncdc.mohfw.gov.in/wp-content/uploads/2025/01/Standard-Treatment-Guidelines-for-Management-of-Snake-Bite.pdf"},
     {"label": "Government of India — Standard Treatment Guidelines for Management of Snakebite", "url": "https://www.ncdc.mohfw.gov.in/wp-content/uploads/2025/01/Standard-Treatment-Guidelines-for-Management-of-Snake-Bite.pdf"},
             {"label": "Government of India — Snakebite standard treatment guidelines", "url": "https://nhm.gov.in/images/pdf/guidelines/nrhm-guidelines/stg/Snakebite_Full.pdf"},
             {"label": "WHO — snakebite treatment", "url": "https://www.who.int/teams/control-of-neglected-tropical-diseases/snakebite-envenoming/treatment"}
