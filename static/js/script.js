@@ -98,6 +98,9 @@
           : 'Model output: '+(result.proposed_label||result.label)));
     document.getElementById('bite-label').textContent=biteHeading;
     const tr=BITE_TRANSLATIONS[currentLanguage];
+    document.getElementById('bite-medical-warning').textContent=currentLanguage==='te'
+      ? 'ఈ మోడల్ శరీర భాగం ఫోటోలో కనిపించే నమూనాలను మాత్రమే వర్గీకరిస్తుంది. విషం శరీరంలోకి వెళ్లిందా లేదా, విష ప్రభావం ఉందా అని నిర్ధారించలేడు. పాము కాటు అనుమానం ఉంటే వెంటనే అత్యవసర వైద్యం పొందండి.'
+      : (currentLanguage==='hi' ? 'यह मॉडल केवल शरीर के हिस्से की तस्वीर में दिखने वाले पैटर्न का वर्गीकरण करता है। यह नहीं बता सकता कि विष शरीर में गया है या विष का असर हुआ है। साँप के काटने का संदेह हो तो तुरंत आपातकालीन चिकित्सा लें।' : result.medical_warning);
     if(!tr){
       const g=result.bite_specific_guidance||{};
       document.getElementById('bite-guidance-title').textContent=g.title||'Bite-specific warning signs';
@@ -118,6 +121,9 @@
   function renderSpeciesLanguage(result) {
     const t=currentUi(),info=result.species_info||{},label=result.label;
     const translated=SPECIES_TRANSLATIONS[currentLanguage]?.[label];
+    document.getElementById('species-notice').textContent=currentLanguage==='te'
+      ? 'AI జాతి గుర్తింపు ఒక అంచనా మాత్రమే; ధృవీకరించిన గుర్తింపు కాదు. పామును సమీపించవద్దు, తాకవద్దు లేదా చుట్టుముట్టవద్దు.'
+      : (currentLanguage==='hi' ? 'AI द्वारा प्रजाति की पहचान केवल अनुमान है, पुष्टि नहीं। साँप के पास न जाएँ, उसे छुएँ या घेरें नहीं।' : (result.notice||''));
     const localizedScores=(result.top_predictions||[]).map(item=>({label:SPECIES_NAMES[currentLanguage]?.[item.label]||item.label,score:item.score}));
     fillScoreList(document.getElementById('species-scores'),localizedScores,'purple');
     if(result.uncertain){
