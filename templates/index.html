@@ -95,12 +95,12 @@
       </div>
       <div class="result-grid">
         <article id="bite-result-card" class="result-card hidden">
-          <div class="result-card-head"><span class="result-icon">01</span><span class="result-label">ONNX · BITE-AREA IMAGE SCORE</span></div>
+          <div class="result-card-head"><span class="result-icon">01</span><span class="result-label" data-i18n="biteResultLabel">ONNX · BITE-AREA IMAGE SCORE</span></div>
           <h3 id="bite-label">—</h3>
-          <p class="confidence-line">Model score <strong id="bite-confidence">—</strong> <span class="not-probability">(not a calibrated medical probability)</span></p>
+          <p class="confidence-line"><span data-i18n="modelScore">Model score</span> <strong id="bite-confidence">—</strong> <span class="not-probability" data-i18n="notCalibrated">(not a calibrated medical probability)</span></p>
           <div class="score-list" id="bite-scores"></div>
-          <div id="bite-warnings" class="warning-callout hidden"><strong>Verification / quality warnings</strong><ul id="bite-warning-list" class="precaution-list"></ul></div>
-          <div class="warning-callout urgent-callout"><strong>Not a medical diagnosis</strong><p id="bite-medical-warning"></p></div>
+          <div id="bite-warnings" class="warning-callout hidden"><strong data-i18n="verificationWarnings">Verification / quality warnings</strong><ul id="bite-warning-list" class="precaution-list"></ul></div>
+          <div class="warning-callout urgent-callout"><strong data-i18n="notDiagnosis">Not a medical diagnosis</strong><p id="bite-medical-warning"></p></div>
           <div class="warning-callout urgent-callout">
             <strong data-i18n="biteUrgencyTitle">TIME-CRITICAL: suspected bite — emergency care NOW</strong>
             <p id="bite-urgency-text">Leave for the nearest emergency-capable hospital immediately. Do not wait for swelling, pain, weakness, or this AI result.</p>
@@ -121,15 +121,15 @@
         </article>
 
         <article id="species-result-card" class="result-card hidden">
-          <div class="result-card-head"><span class="result-icon purple-icon">02</span><span class="result-label">DINOV2 · CLOSED-SET SPECIES CLASSIFIER</span></div>
+          <div class="result-card-head"><span class="result-icon purple-icon">02</span><span class="result-label" data-i18n="speciesResultLabel">DINOV2 · CLOSED-SET SPECIES CLASSIFIER</span></div>
           <div id="species-uncertain-banner" class="warning-callout hidden"><strong>Unable to identify confidently</strong><p id="species-uncertain-reason"></p></div>
           <h3 id="species-label">—</h3>
           <p id="species-candidate" class="result-footnote hidden"></p>
           <p class="scientific-name" id="species-scientific-name"></p>
           <div id="species-status" class="status-badge">Risk information: not verified</div>
-          <p class="confidence-line">Top model score <strong id="species-confidence">—</strong> <span class="not-probability">(not a calibrated probability)</span></p>
+          <p class="confidence-line"><span data-i18n="topModelScore">Top model score</span> <strong id="species-confidence">—</strong> <span class="not-probability" data-i18n="notCalibratedShort">(not a calibrated probability)</span></p>
           <div class="score-list" id="species-scores"></div>
-          <div id="species-warnings" class="warning-callout hidden"><strong>Image and model warnings</strong><ul id="species-warning-list" class="precaution-list"></ul></div>
+          <div id="species-warnings" class="warning-callout hidden"><strong data-i18n="imageModelWarnings">Image and model warnings</strong><ul id="species-warning-list" class="precaution-list"></ul></div>
           <p id="species-summary" class="species-summary"></p>
           <div class="warning-callout urgent-callout">
             <strong data-i18n="speciesUrgencyTitle">Snake photo is not a patient risk assessment</strong>
