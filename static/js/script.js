@@ -68,7 +68,7 @@
 
   document.getElementById('result-find-hospital-button').addEventListener('click', () => {
     document.getElementById('find-hospital-button').click();
-    document.getElementById('emergency-tools').scrollIntoView({behavior:'smooth',block:'center'});
+    document.querySelector('.emergency-tools').scrollIntoView({behavior:'smooth',block:'center'});
   });
 
   const UI_TEXT = {
