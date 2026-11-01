@@ -7,6 +7,7 @@ medical treatment. A classifier prediction is not a confirmed identification.
 SPECIES_INFO = {
     "Banded Racer": {
         "scientific_name": "Argyrogena fasciolata",
+        "clinical_profile": "Generally considered non-venomous; no venom syndrome is expected. A bite can still cause a wound and infection.",
         "venom_status": "Generally classified as non-venomous",
         "risk_level": "lower-risk, but do not handle",
         "status_class": "nonvenomous",
@@ -23,6 +24,7 @@ SPECIES_INFO = {
     },
     "Checkered Keelback": {
         "scientific_name": "Fowlea piscator",
+        "clinical_profile": "Generally considered non-venomous; no venom syndrome is expected. A bite can still cause a wound and infection.",
         "venom_status": "Non-venomous (commonly classified)",
         "risk_level": "do not handle",
         "status_class": "nonvenomous",
@@ -39,6 +41,7 @@ SPECIES_INFO = {
     },
     "Common Krait": {
         "scientific_name": "Bungarus caeruleus",
+        "clinical_profile": "Potential neurotoxic envenoming. Early local pain or swelling may be slight or absent; drooping eyelids, double vision, abdominal pain, difficulty swallowing or speaking, weakness and breathing failure can occur. Symptoms may be delayed.",
         "venom_status": "Highly venomous; medically important",
         "risk_level": "high caution",
         "status_class": "venomous",
@@ -58,6 +61,7 @@ SPECIES_INFO = {
     },
     "Common Rat Snake": {
         "scientific_name": "Ptyas mucosa",
+        "clinical_profile": "Non-venomous; venom-related illness is not expected. A bite can still cause puncture wounds and infection.",
         "venom_status": "Non-venomous",
         "risk_level": "do not handle",
         "status_class": "nonvenomous",
@@ -74,6 +78,7 @@ SPECIES_INFO = {
     },
     "Common Sand Boa": {
         "scientific_name": "Eryx conicus",
+        "clinical_profile": "Non-venomous; venom-related illness is not expected. A bite can still cause a wound and infection.",
         "venom_status": "Non-venomous",
         "risk_level": "do not handle",
         "status_class": "nonvenomous",
@@ -90,6 +95,7 @@ SPECIES_INFO = {
     },
     "Common Trinket": {
         "scientific_name": "Coelognathus helena",
+        "clinical_profile": "Generally considered non-venomous; venom-related illness is not expected. A bite can still cause a wound and infection.",
         "venom_status": "Non-venomous (commonly classified)",
         "risk_level": "do not handle",
         "status_class": "nonvenomous",
@@ -106,6 +112,7 @@ SPECIES_INFO = {
     },
     "Green Tree Vine": {
         "scientific_name": "Ahaetulla nasuta",
+        "clinical_profile": "Rear-fanged and described as mildly venomous. A bite may cause local pain or swelling; human clinical evidence is limited, so do not assume it is harmless.",
         "venom_status": "Reported as mildly venomous / rear-fanged — do not treat as harmless",
         "risk_level": "caution; avoid all contact",
         "status_class": "caution",
@@ -122,6 +129,7 @@ SPECIES_INFO = {
     },
     "Indian Rock Python": {
         "scientific_name": "Python molurus",
+        "clinical_profile": "Non-venomous constrictor. The main danger is physical injury from a bite or constriction, not venom.",
         "venom_status": "Non-venomous, but a large powerful constrictor",
         "risk_level": "high physical-hazard caution",
         "status_class": "caution",
@@ -138,6 +146,7 @@ SPECIES_INFO = {
     },
     "King Cobra": {
         "scientific_name": "Ophiophagus hannah",
+        "clinical_profile": "Potential neurotoxic envenoming that can impair nerve-to-muscle signalling and breathing. Weakness, drooping eyelids, difficulty swallowing or speaking, and respiratory paralysis are emergency signs.",
         "venom_status": "Highly venomous; medically important",
         "risk_level": "high caution",
         "status_class": "venomous",
@@ -154,6 +163,7 @@ SPECIES_INFO = {
     },
     "Monocled Cobra": {
         "scientific_name": "Naja kaouthia",
+        "clinical_profile": "Potential neurotoxic envenoming with local tissue injury. Drooping eyelids, weakness, difficulty swallowing or breathing, progressive swelling, blistering or tissue damage require emergency assessment.",
         "venom_status": "Venomous; medically important",
         "risk_level": "high caution",
         "status_class": "venomous",
@@ -170,6 +180,7 @@ SPECIES_INFO = {
     },
     "Russell's Viper": {
         "scientific_name": "Daboia russelii",
+        "clinical_profile": "Potential haemotoxic/vasculotoxic envenoming: abnormal blood clotting, spontaneous bleeding, shock and acute kidney injury. Neurological effects can also occur in some regions.",
         "venom_status": "Highly venomous; medically important",
         "risk_level": "high caution",
         "status_class": "venomous",
@@ -186,6 +197,7 @@ SPECIES_INFO = {
     },
     "Saw-scaled Viper": {
         "scientific_name": "Echis carinatus",
+        "clinical_profile": "Potential haemotoxic/vasculotoxic envenoming: abnormal clotting, bleeding, painful swelling, blistering and local tissue damage. Do not wait for visible symptoms.",
         "venom_status": "Highly venomous; medically important",
         "risk_level": "high caution",
         "status_class": "venomous",
@@ -202,6 +214,7 @@ SPECIES_INFO = {
     },
     "Spectacled Cobra": {
         "scientific_name": "Naja naja",
+        "clinical_profile": "Potential neurotoxic envenoming with local tissue injury. Weakness, drooping eyelids, difficulty swallowing or breathing, progressive swelling, blistering or tissue damage are emergency signs.",
         "venom_status": "Venomous; medically important",
         "risk_level": "high caution",
         "status_class": "venomous",
