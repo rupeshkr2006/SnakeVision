@@ -21,6 +21,48 @@
   const maxRequestBytes = Math.floor(3.6 * 1024 * 1024);
   const percent = value => `${(Number(value) * 100).toFixed(1)}%`;
   let currentLanguage = (() => { try { return ['en','te','hi'].includes(localStorage.getItem('snakevision-language')) ? localStorage.getItem('snakevision-language') : 'en'; } catch (_) { return 'en'; } })();
+
+  const emergencyText = {
+    en: {title:'Find the nearest hospital',description:'Tap the button and allow location access. SnakeVision will open nearby hospitals on Google Maps using your current location.',button:'📍 Find nearest hospital',status:'Your location is only requested after you press the button.',loading:'Getting your location…',denied:'Location permission was denied. Enable location access in your browser and try again, or call 112.',unsupported:'This browser does not support location access. Open Google Maps and search for a nearby hospital, or call 112.',error:'Could not get your location. Check device location settings and try again, or call 112.',map:'Open nearby hospitals in Google Maps ↗',privacy:'Your browser asks permission before sharing location. Location is used to create the map search link and is not sent to the SnakeVision server.'},
+    te: {title:'దగ్గరలోని ఆసుపత్రిని కనుగొనండి',description:'బటన్ నొక్కి లొకేషన్ అనుమతి ఇవ్వండి. మీ ప్రస్తుత లొకేషన్ ఆధారంగా Google Mapsలో దగ్గరలోని ఆసుపత్రులను తెరుస్తుంది.',button:'📍 దగ్గరలోని ఆసుపత్రి',status:'మీరు బటన్ నొక్కిన తర్వాత మాత్రమే లొకేషన్ అడుగుతుంది.',loading:'మీ లొకేషన్ పొందుతోంది…',denied:'లొకేషన్ అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్స్‌లో అనుమతించండి లేదా 112కు కాల్ చేయండి.',unsupported:'ఈ బ్రౌజర్ లొకేషన్‌కు మద్దతు ఇవ్వదు. Google Mapsలో ఆసుపత్రి కోసం వెతకండి లేదా 112కు కాల్ చేయండి.',error:'లొకేషన్ పొందలేకపోయాం. ఫోన్ లొకేషన్ సెట్టింగ్స్ చూడండి లేదా 112కు కాల్ చేయండి.',map:'Google Mapsలో దగ్గరలోని ఆసుపత్రులను తెరవండి ↗',privacy:'లొకేషన్ పంచుకునే ముందు బ్రౌజర్ మీ అనుమతి అడుగుతుంది. ఈ లొకేషన్ మ్యాప్ లింక్ తయారీకే ఉపయోగించబడుతుంది; SnakeVision సర్వర్‌కు పంపబడదు.'},
+    hi: {title:'नज़दीकी अस्पताल खोजें',description:'बटन दबाएँ और लोकेशन की अनुमति दें। SnakeVision आपके वर्तमान स्थान के आधार पर Google Maps में आसपास के अस्पताल खोलेगा।',button:'📍 नज़दीकी अस्पताल खोजें',status:'आपके बटन दबाने के बाद ही लोकेशन माँगी जाएगी।',loading:'आपकी लोकेशन प्राप्त की जा रही है…',denied:'लोकेशन की अनुमति नहीं मिली। ब्राउज़र सेटिंग में अनुमति दें या 112 पर कॉल करें।',unsupported:'यह ब्राउज़र लोकेशन सुविधा का समर्थन नहीं करता। Google Maps में अस्पताल खोजें या 112 पर कॉल करें।',error:'लोकेशन प्राप्त नहीं हुई। डिवाइस की लोकेशन सेटिंग जाँचें या 112 पर कॉल करें।',map:'Google Maps में आसपास के अस्पताल खोलें ↗',privacy:'लोकेशन साझा करने से पहले ब्राउज़र अनुमति माँगेगा। लोकेशन केवल मैप लिंक बनाने के लिए उपयोग होती है और SnakeVision सर्वर पर नहीं भेजी जाती।'}
+  };
+  function renderEmergencyTools() {
+    const t = emergencyText[currentLanguage] || emergencyText.en;
+    document.getElementById('emergency-tools-title').textContent = t.title;
+    document.getElementById('emergency-tools-description').textContent = t.description;
+    document.getElementById('find-hospital-button').textContent = t.button;
+    document.getElementById('location-privacy-note').textContent = t.privacy;
+    const link = document.getElementById('hospital-map-link');
+    if (!link.classList.contains('hidden')) link.textContent = t.map;
+    const status = document.getElementById('location-status');
+    if (!status.dataset.state || status.dataset.state === 'idle') status.textContent = t.status;
+    else if (status.dataset.state === 'loading') status.textContent = t.loading;
+  }
+  document.getElementById('find-hospital-button').addEventListener('click', () => {
+    const t = emergencyText[currentLanguage] || emergencyText.en;
+    const status = document.getElementById('location-status');
+    const link = document.getElementById('hospital-map-link');
+    link.classList.add('hidden');
+    if (!('geolocation' in navigator)) {
+      status.textContent = t.unsupported; status.dataset.state = 'error'; return;
+    }
+    status.textContent = t.loading; status.dataset.state = 'loading';
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const mapsUrl = 'https://www.google.com/maps/search/?api=1&query=hospitals&query_place_id=&center=' + encodeURIComponent(lat + ',' + lon);
+      link.href = 'https://www.google.com/maps/search/hospitals/@' + lat + ',' + lon + ',14z';
+      link.textContent = t.map;
+      link.classList.remove('hidden');
+      status.textContent = (currentLanguage === 'te' ? 'లొకేషన్ పొందబడింది. మ్యాప్‌లో దగ్గరలోని ఆసుపత్రులను తెరవండి.' : currentLanguage === 'hi' ? 'लोकेशन मिल गई। मैप में नज़दीकी अस्पताल खोलें।' : 'Location received. Open the map to view nearby hospitals.') + ' (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + ')';
+      status.dataset.state = 'success';
+    }, error => {
+      status.textContent = error && error.code === 1 ? t.denied : t.error;
+      status.dataset.state = 'error';
+    }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+  });
+
   const UI_TEXT = {
     en:{analysis:'ANALYSIS',resultsTitle:'Results and precautions',languageLabel:'Language',biteResultLabel:'ONNX · BITE-AREA IMAGE SCORE',speciesResultLabel:'DINOV2 · CLOSED-SET SPECIES CLASSIFIER',modelScore:'Model score',topModelScore:'Top model score',notCalibrated:'(not a calibrated medical probability)',notCalibratedShort:'(not a calibrated probability)',verificationWarnings:'Verification / quality warnings',notDiagnosis:'Not a medical diagnosis',imageModelWarnings:'Image and model warnings',symptomsHeading:'Emergency symptoms to watch for',dontHeading:'Do not do these things',firstAidHeading:'Immediate first aid while arranging transport',speciesPrecautionsHeading:'Precautions for the predicted species',biteUrgencyTitle:'TIME-CRITICAL: suspected bite — emergency care NOW',biteUrgencyText:'Leave for the nearest emergency-capable hospital immediately. Do not wait for swelling, pain, weakness, or this AI result.',speciesUrgencyTitle:'Snake photo is not a patient risk assessment',speciesUrgencyText:'If a person may have been bitten, seek emergency care now regardless of the predicted species or visible symptoms.',urgencyTitle:'TIME-CRITICAL: go to a hospital NOW',survivalWarning:'A photograph cannot predict survival time or show whether venom was injected. Do not wait for symptoms or an AI result. India’s national guideline calls for at least 24 hours of clinical observation at a health facility after suspected snakebite. This is an observation recommendation, not a survival estimate.',refs:'References',uncertainTitle:'Unable to identify confidently',uncertainPrecautions:'General safety guidance (species not identified)',predictedPrecautions:'Precautions for the predicted species',speciesUnknown:'Species/risk status not assigned',unknownSummary:'The image may be unrelated, blurred, low-detail, or difficult for this classifier. Do not infer that a snake is present or absent from this output.',unknownSpeciesList:['Do not approach, touch, corner, or attempt to identify a snake at close range.','Keep people and pets away; contact a trained local snake rescuer if a snake is present.','For any suspected bite, seek emergency medical care immediately.']},
     te:{analysis:'విశ్లేషణ',resultsTitle:'ఫలితాలు మరియు జాగ్రత్తలు',languageLabel:'భాష',biteResultLabel:'ONNX · కాటు ప్రాంత చిత్ర స్కోరు',speciesResultLabel:'DINOV2 · 13 జాతుల పాము వర్గీకరణ',modelScore:'మోడల్ స్కోరు',topModelScore:'అత్యధిక మోడల్ స్కోరు',notCalibrated:'(వైద్య సంభావ్యతగా ధృవీకరించబడలేదు)',notCalibratedShort:'(ధృవీకరించిన సంభావ్యత కాదు)',verificationWarnings:'ధృవీకరణ / చిత్ర నాణ్యత హెచ్చరికలు',notDiagnosis:'ఇది వైద్య నిర్ధారణ కాదు',imageModelWarnings:'చిత్రం మరియు మోడల్ హెచ్చరికలు',symptomsHeading:'గమనించాల్సిన అత్యవసర లక్షణాలు',dontHeading:'చేయకూడని పనులు',firstAidHeading:'ఆసుపత్రికి తరలించేలోపు తక్షణ ప్రథమ చికిత్స',speciesPrecautionsHeading:'అంచనా వేసిన పాము జాతికి ప్రత్యేక జాగ్రత్తలు',biteUrgencyTitle:'అత్యవసరం: పాము కాటు అనుమానం — వెంటనే ఆసుపత్రికి వెళ్లండి',biteUrgencyText:'వెంటనే అత్యవసర వైద్యం అందించే సమీప ఆసుపత్రికి బయలుదేరండి. వాపు, నొప్పి, బలహీనత లేదా ఈ AI ఫలితం కోసం వేచి ఉండకండి.',speciesUrgencyTitle:'పాము ఫోటో రోగి ప్రమాద స్థాయిని నిర్ధారించదు',speciesUrgencyText:'ఎవరినైనా పాము కరిచి ఉండవచ్చని అనుమానం ఉంటే, అంచనా వేసిన జాతి లేదా కనిపించే లక్షణాలతో సంబంధం లేకుండా వెంటనే అత్యవసర వైద్యం పొందండి.',urgencyTitle:'అత్యవసరం: ఇప్పుడే ఆసుపత్రికి వెళ్లండి',survivalWarning:'ఫోటో ద్వారా రోగి ఎంతకాలం బతుకుతారో లేదా విషం శరీరంలోకి వెళ్లిందో చెప్పలేము. లక్షణాలు లేదా AI ఫలితం కోసం వేచి ఉండకండి. భారత జాతీయ మార్గదర్శకం ప్రకారం అనుమానిత పాము కాటు తర్వాత కనీసం 24 గంటలు వైద్య కేంద్రంలో పరిశీలన అవసరం. ఇది పరిశీలన సూచన మాత్రమే; బతికే సమయ అంచనా కాదు.',refs:'ఆధారాలు',uncertainTitle:'పామును నమ్మకంగా గుర్తించలేకపోయాం',uncertainPrecautions:'సాధారణ భద్రతా సూచనలు (జాతి గుర్తించబడలేదు)',predictedPrecautions:'అంచనా వేసిన పాము జాతికి జాగ్రత్తలు',speciesUnknown:'జాతి / ప్రమాద స్థాయి నిర్ధారించబడలేదు',unknownSummary:'చిత్రం సంబంధం లేనిదై ఉండవచ్చు, అస్పష్టంగా లేదా తక్కువ వివరాలతో ఉండవచ్చు. ఈ ఫలితం ఆధారంగా పాము ఉందని లేదా లేదని నిర్ణయించవద్దు.',unknownSpeciesList:['పాముకు దగ్గరగా వెళ్లవద్దు, తాకవద్దు, చుట్టుముట్టవద్దు లేదా దగ్గరగా గుర్తించడానికి ప్రయత్నించవద్దు.','ప్రజలు, పెంపుడు జంతువులను దూరంగా ఉంచండి; పాము ఉంటే శిక్షణ పొందిన స్థానిక స్నేక్ రెస్క్యూను సంప్రదించండి.','కాటు అనుమానం ఉన్నా వెంటనే అత్యవసర వైద్య సహాయం పొందండి.']},
@@ -80,6 +122,7 @@
   function applyLanguage() {
     const t=currentUi();
     const page=PAGE_TEXT[currentLanguage]||PAGE_TEXT.en;
+    renderEmergencyTools();
     document.documentElement.lang=currentLanguage;
     document.querySelectorAll('[data-page-i18n]').forEach(node=>{const key=node.dataset.pageI18n;if(page[key])node.textContent=page[key];});
     document.querySelectorAll('[data-i18n]').forEach(node=>{const key=node.dataset.i18n;if(t[key])node.textContent=t[key];});
