@@ -63,6 +63,16 @@
     }
   };
   const currentUi = () => UI_TEXT[currentLanguage] || UI_TEXT.en;
+
+  const SPECIES_NAMES = {
+    te:{'Common Krait':'కట్లపాము (క్రైట్)','King Cobra':'రాజ నాగుపాము','Monocled Cobra':'నాగుపాము','Russell\'s Viper':'రస్సెల్ వైపర్','Saw-scaled Viper':'సా-స్కేల్డ్ వైపర్','Spectacled Cobra':'భారతీయ నాగుపాము','Banded Racer':'బ్యాండెడ్ రేసర్','Checkered Keelback':'చెకర్డ్ కీల్బ్యాక్','Common Rat Snake':'ధామన్ (రాట్ స్నేక్)','Common Sand Boa':'సాండ్ బోవా','Common Trinket':'ట్రింకెట్ పాము','Green Tree Vine':'ఆకుపచ్చ తీగ పాము','Indian Rock Python':'భారతీయ కొండచిలువ'},
+    hi:{'Common Krait':'कॉमन करैत','King Cobra':'किंग कोबरा','Monocled Cobra':'मोनोक्ल्ड कोबरा','Russell\'s Viper':'रसेल वाइपर','Saw-scaled Viper':'फुरसा वाइपर','Spectacled Cobra':'भारतीय नाग','Banded Racer':'बैंडेड रेसर','Checkered Keelback':'चेकर्ड कीलबैक','Common Rat Snake':'धामन (रैट स्नेक)','Common Sand Boa':'सैंड बोआ','Common Trinket':'कॉमन ट्रिंकेट','Green Tree Vine':'हरी बेल वाला साँप','Indian Rock Python':'भारतीय अजगर'}
+  };
+  const RISK_NAMES = {
+    te:{'Highly venomous; medically important':'అత్యంత విషపూరితం; వైద్యపరంగా ప్రమాదకరం','Venomous; medically important':'విషపూరితమైనది; వైద్యపరంగా ప్రమాదకరం','Non-venomous':'విషరహితం అని సాధారణంగా వర్గీకరించబడింది','Non-venomous (commonly classified)':'సాధారణంగా విషరహితంగా వర్గీకరించబడింది','Generally classified as non-venomous':'సాధారణంగా విషరహితంగా వర్గీకరించబడింది','Non-venomous, but a large powerful constrictor':'విషరహితం, కానీ బలమైన పెద్ద కొండచిలువ','Unknown — treat as potentially dangerous':'తెలియదు — ప్రమాదకరమని భావించండి','Reported as mildly venomous / rear-fanged — do not treat as harmless':'స్వల్ప విషం ఉండవచ్చని నివేదికలు ఉన్నాయి — హానిలేనిదిగా భావించవద్దు'},
+    hi:{'Highly venomous; medically important':'अत्यधिक विषैला; चिकित्सकीय रूप से खतरनाक','Venomous; medically important':'विषैला; चिकित्सकीय रूप से खतरनाक','Non-venomous':'आमतौर पर विषहीन माना जाता है','Non-venomous (commonly classified)':'आमतौर पर विषहीन वर्गीकृत','Generally classified as non-venomous':'आमतौर पर विषहीन माना जाता है','Non-venomous, but a large powerful constrictor':'विषहीन, लेकिन बड़ा और शक्तिशाली अजगर','Unknown — treat as potentially dangerous':'अज्ञात — संभावित रूप से खतरनाक मानें','Reported as mildly venomous / rear-fanged — do not treat as harmless':'हल्का विषैला बताया गया है — सुरक्षित न मानें'}
+  };
+
   function applyLanguage() {
     const t=currentUi();
     document.documentElement.lang=currentLanguage;
@@ -96,8 +106,8 @@
     const t=currentUi(),info=result.species_info||{},label=result.label;
     const translated=SPECIES_TRANSLATIONS[currentLanguage]?.[label];
     if(result.uncertain){
-      document.getElementById('species-uncertain-reason').textContent=currentLanguage==='te'?'మోడల్ స్కోరు '+percent(result.confidence)+', మొదటి రెండు అంచనాల మధ్య తేడా '+percent(result.top_two_margin)+'. నమ్మకమైన గుర్తింపుగా ఈ ఫలితాన్ని చూపడం లేదు.':'शीर्ष स्कोर '+percent(result.confidence)+' और पहले दो अनुमानों का अंतर '+percent(result.top_two_margin)+' है। इसे पक्की पहचान नहीं माना जा रहा है।';
-      document.getElementById('species-candidate').textContent=currentLanguage==='te'?'అంచనా మాత్రమే (ధృవీకరించబడలేదు): '+(result.candidate_label||'తెలియదు'):'संभावित नाम (पुष्टि नहीं): '+(result.candidate_label||'अज्ञात');
+      document.getElementById('species-uncertain-reason').textContent=currentLanguage==='te'?'మోడల్ స్కోరు '+percent(result.confidence)+', మొదటి రెండు అంచనాల మధ్య తేడా '+percent(result.top_two_margin)+'. నమ్మకమైన గుర్తింపుగా ఈ ఫలితాన్ని చూపడం లేదు.':(currentLanguage==='hi'?'शीर्ष स्कोर '+percent(result.confidence)+' और पहले दो अनुमानों का अंतर '+percent(result.top_two_margin)+' है। इसे पक्की पहचान नहीं माना जा रहा है.':'The top score is '+percent(result.confidence)+' and the top-two score margin is '+percent(result.top_two_margin)+'. This is not a confident identification.');
+      document.getElementById('species-candidate').textContent=currentLanguage==='te'?'అంచనా మాత్రమే (ధృవీకరించబడలేదు): '+(result.candidate_label||'తెలియదు'):(currentLanguage==='hi'?'संभावित नाम (पुष्टि नहीं): '+(result.candidate_label||'अज्ञात'):'Top candidate (not confirmed): '+(result.candidate_label||'unknown'));
       document.getElementById('species-uncertain-banner').querySelector('strong').textContent=t.uncertainTitle;
       document.getElementById('species-status').textContent=t.speciesUnknown;
       document.getElementById('species-summary').textContent=t.unknownSummary;
@@ -105,6 +115,10 @@
       fillList(document.getElementById('species-precautions'),t.unknownSpeciesList);
       return;
     }
+    const speciesDisplayName=SPECIES_NAMES[currentLanguage]?.[label]||label;
+    document.getElementById('species-label').textContent=speciesDisplayName;
+    const riskStatus=info.venom_status||'Unknown — treat as potentially dangerous';
+    document.getElementById('species-status').textContent=(currentLanguage==='en'?'Risk information: ': (currentLanguage==='te'?'ప్రమాద సమాచారం: ':'जोखिम जानकारी: '))+(RISK_NAMES[currentLanguage]?.[riskStatus]||riskStatus);
     if(translated){
       document.getElementById('species-summary').textContent=currentLanguage==='te'?'ఈ జాతి అంచనా మాత్రమే; ఫోటో ఆధారంగా ఖచ్చితమైన గుర్తింపు కాదు. పామును సమీపించవద్దు.':'यह केवल अनुमान है, फोटो से पुष्टि नहीं। साँप के पास न जाएँ।';
       document.getElementById('species-precautions-wrap').querySelector('h4').textContent=t.predictedPrecautions;
