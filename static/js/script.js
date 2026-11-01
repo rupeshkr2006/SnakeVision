@@ -22,53 +22,33 @@
   const percent = value => `${(Number(value) * 100).toFixed(1)}%`;
   let currentLanguage = (() => { try { return ['en','te','hi'].includes(localStorage.getItem('snakevision-language')) ? localStorage.getItem('snakevision-language') : 'en'; } catch (_) { return 'en'; } })();
 
-  const emergencyText = {
-    en: {title:'Find the nearest hospital',description:'Tap the button and allow location access. SnakeVision will open nearby hospitals on Google Maps using your current location.',button:'📍 Find nearest hospital',status:'Your location is only requested after you press the button.',loading:'Getting your location…',denied:'Location permission was denied. Enable location access in your browser and try again, or call 112.',unsupported:'This browser does not support location access. Open Google Maps and search for a nearby hospital, or call 112.',error:'Could not get your location. Check device location settings and try again, or call 112.',map:'Open nearby hospitals in Google Maps ↗',privacy:'Your browser asks permission before sharing location. Location is used to create the map search link and is not sent to the SnakeVision server.'},
-    te: {title:'దగ్గరలోని ఆసుపత్రిని కనుగొనండి',description:'బటన్ నొక్కి లొకేషన్ అనుమతి ఇవ్వండి. మీ ప్రస్తుత లొకేషన్ ఆధారంగా Google Mapsలో దగ్గరలోని ఆసుపత్రులను తెరుస్తుంది.',button:'📍 దగ్గరలోని ఆసుపత్రి',status:'మీరు బటన్ నొక్కిన తర్వాత మాత్రమే లొకేషన్ అడుగుతుంది.',loading:'మీ లొకేషన్ పొందుతోంది…',denied:'లొకేషన్ అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్స్‌లో అనుమతించండి లేదా 112కు కాల్ చేయండి.',unsupported:'ఈ బ్రౌజర్ లొకేషన్‌కు మద్దతు ఇవ్వదు. Google Mapsలో ఆసుపత్రి కోసం వెతకండి లేదా 112కు కాల్ చేయండి.',error:'లొకేషన్ పొందలేకపోయాం. ఫోన్ లొకేషన్ సెట్టింగ్స్ చూడండి లేదా 112కు కాల్ చేయండి.',map:'Google Mapsలో దగ్గరలోని ఆసుపత్రులను తెరవండి ↗',privacy:'లొకేషన్ పంచుకునే ముందు బ్రౌజర్ మీ అనుమతి అడుగుతుంది. ఈ లొకేషన్ మ్యాప్ లింక్ తయారీకే ఉపయోగించబడుతుంది; SnakeVision సర్వర్‌కు పంపబడదు.'},
-    hi: {title:'नज़दीकी अस्पताल खोजें',description:'बटन दबाएँ और लोकेशन की अनुमति दें। SnakeVision आपके वर्तमान स्थान के आधार पर Google Maps में आसपास के अस्पताल खोलेगा।',button:'📍 नज़दीकी अस्पताल खोजें',status:'आपके बटन दबाने के बाद ही लोकेशन माँगी जाएगी।',loading:'आपकी लोकेशन प्राप्त की जा रही है…',denied:'लोकेशन की अनुमति नहीं मिली। ब्राउज़र सेटिंग में अनुमति दें या 112 पर कॉल करें।',unsupported:'यह ब्राउज़र लोकेशन सुविधा का समर्थन नहीं करता। Google Maps में अस्पताल खोजें या 112 पर कॉल करें।',error:'लोकेशन प्राप्त नहीं हुई। डिवाइस की लोकेशन सेटिंग जाँचें या 112 पर कॉल करें।',map:'Google Maps में आसपास के अस्पताल खोलें ↗',privacy:'लोकेशन साझा करने से पहले ब्राउज़र अनुमति माँगेगा। लोकेशन केवल मैप लिंक बनाने के लिए उपयोग होती है और SnakeVision सर्वर पर नहीं भेजी जाती।'}
-  };
-  function renderEmergencyTools() {
-    const t = emergencyText[currentLanguage] || emergencyText.en;
-    document.getElementById('emergency-tools-title').textContent = t.title;
-    document.getElementById('emergency-tools-description').textContent = t.description;
-    document.getElementById('find-hospital-button').textContent = t.button;
-    document.getElementById('location-privacy-note').textContent = t.privacy;
-    const link = document.getElementById('hospital-map-link');
-    if (!link.classList.contains('hidden')) link.textContent = t.map;
-    const status = document.getElementById('location-status');
-    if (!status.dataset.state || status.dataset.state === 'idle') status.textContent = t.status;
-    else if (status.dataset.state === 'loading') status.textContent = t.loading;
-  }
-  document.getElementById('find-hospital-button').addEventListener('click', () => {
-    const t = emergencyText[currentLanguage] || emergencyText.en;
-    const status = document.getElementById('location-status');
-    const link = document.getElementById('hospital-map-link');
-    const map = document.getElementById('hospital-map');
-    link.classList.add('hidden');
-    map.classList.add('hidden');
-    if (!('geolocation' in navigator)) {
-      status.textContent = t.unsupported; status.dataset.state = 'error'; return;
+  const emergencyPopup = document.getElementById("emergency-popup");
+  const popupLocationStatus = document.getElementById("popup-location-status");
+  const popupHospitalLink = document.getElementById("popup-hospital-link");
+  function showEmergencyPopup(reason) {
+    const title = document.getElementById("emergency-popup-title");
+    const message = document.getElementById("emergency-popup-message");
+    if (reason === "bite") {
+      title.textContent = currentLanguage === "te" ? "పాము కాటు అనుమానం — అత్యవసర వైద్యం అవసరం" : currentLanguage === "hi" ? "साँप के काटने का संदेह — तुरंत चिकित्सा लें" : "Possible snakebite — emergency care now";
+      message.textContent = currentLanguage === "te" ? "కాటు ప్రాంతం చిత్రం విశ్లేషించబడింది. ఈ AI ఫలితం విషం శరీరంలోకి వెళ్లిందో లేదో నిర్ధారించదు. వెంటనే 112కు కాల్ చేయండి లేదా అత్యవసర ఆసుపత్రికి వెళ్లండి." : currentLanguage === "hi" ? "काटे गए क्षेत्र की छवि का विश्लेषण हुआ है। AI यह नहीं बता सकता कि शरीर में विष गया है या नहीं। 112 पर कॉल करें या तुरंत अस्पताल जाएँ।" : "A bite-area image was analyzed. This AI result cannot tell whether venom entered the body. Call 112 or go to an emergency-capable hospital now.";
+    } else {
+      title.textContent = currentLanguage === "te" ? "విషపూరిత పాము గుర్తింపు — జాగ్రత్త" : currentLanguage === "hi" ? "विषैले साँप की पहचान — सावधानी" : "Potentially venomous snake detected";
+      message.textContent = currentLanguage === "te" ? "ఇది ఫోటో ఆధారిత అంచనా మాత్రమే. ఎవరినైనా కరిచి ఉండవచ్చని అనుమానం ఉంటే వెంటనే 112కు కాల్ చేయండి లేదా ఆసుపత్రికి వెళ్లండి." : currentLanguage === "hi" ? "यह केवल फोटो-आधारित अनुमान है। किसी को काटे जाने का संदेह हो तो तुरंत 112 पर कॉल करें या अस्पताल जाएँ।" : "This is only a photo-based prediction, not confirmation. If anyone may have been bitten, call 112 or seek emergency hospital care immediately.";
     }
-    status.textContent = t.loading; status.dataset.state = 'loading';
+    emergencyPopup.classList.remove("hidden");
+  }
+  document.getElementById("emergency-popup-close").addEventListener("click", () => emergencyPopup.classList.add("hidden"));
+  document.getElementById("popup-hospital-button").addEventListener("click", () => {
+    popupHospitalLink.classList.add("hidden");
+    popupLocationStatus.textContent = "Requesting your location…";
+    if (!navigator.geolocation) { popupLocationStatus.textContent = "Location is unavailable in this browser. Call 112 for emergency assistance."; return; }
     navigator.geolocation.getCurrentPosition(position => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      link.href = 'https://www.google.com/maps/search/hospitals/@' + lat + ',' + lon + ',14z';
-      map.src = 'https://maps.google.com/maps?q=' + encodeURIComponent('hospitals near ' + lat + ',' + lon) + '&output=embed';
-      map.classList.remove('hidden');
-      link.textContent = t.map;
-      link.classList.remove('hidden');
-      status.textContent = (currentLanguage === 'te' ? 'లొకేషన్ పొందబడింది. మ్యాప్‌లో దగ్గరలోని ఆసుపత్రులను తెరవండి.' : currentLanguage === 'hi' ? 'लोकेशन मिल गई। मैप में नज़दीकी अस्पताल खोलें।' : 'Location received. Open the map to view nearby hospitals.') + ' (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + ')';
-      status.dataset.state = 'success';
-    }, error => {
-      status.textContent = error && error.code === 1 ? t.denied : t.error;
-      status.dataset.state = 'error';
-    }, {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
-  });
-
-  document.getElementById('result-find-hospital-button').addEventListener('click', () => {
-    document.getElementById('find-hospital-button').click();
-    document.querySelector('.emergency-tools').scrollIntoView({behavior:'smooth',block:'center'});
+      const lat = position.coords.latitude, lon = position.coords.longitude;
+      popupHospitalLink.href = "https://www.google.com/maps/search/hospitals/@" + lat + "," + lon + ",14z";
+      popupHospitalLink.textContent = "View nearby hospitals on Google Maps ↗";
+      popupHospitalLink.classList.remove("hidden");
+      popupLocationStatus.textContent = "Location received. Open the link to view nearby hospitals.";
+    }, error => { popupLocationStatus.textContent = error && error.code === 1 ? "Location permission denied. You can still call 112." : "Could not get location. Check device settings or call 112."; }, {enableHighAccuracy:true,timeout:12000,maximumAge:60000});
   });
 
   const UI_TEXT = {
@@ -433,6 +413,7 @@
   function displayBite(result) {
     if (!result) return;
     window.latestBiteResult = result;
+    showEmergencyPopup("bite");
     biteResultCard.classList.remove('hidden');
     let heading = `Model output: ${result.label}`;
     if (!result.class_mapping_verified) {
@@ -459,6 +440,10 @@
     window.latestSpeciesResult = result;
     speciesResultCard.classList.remove('hidden');
     const info = result.species_info || {};
+    const riskClass = String(info.status_class || "").toLowerCase();
+    const riskText = String(info.venom_status || "").toLowerCase();
+    const predictedVenomous = !result.uncertain && (riskClass === "venomous" || (riskText.includes("venomous") && !riskText.includes("non-venomous") && !riskText.includes("mildly")));
+    if (predictedVenomous) showEmergencyPopup("species");
     document.getElementById('species-label').textContent = result.label;
     document.getElementById('species-confidence').textContent = percent(result.confidence);
     fillScoreList(document.getElementById('species-scores'), result.top_predictions, 'purple');
