@@ -54,3 +54,5 @@
 .hospital-map-link{display:inline-block;margin:4px 0;color:#176b49;font-size:12px;font-weight:850}
 .emergency-tools small{display:block;margin-top:8px;color:var(--muted);font-size:10px}
 @media(max-width:480px){.emergency-tools{padding:15px}.emergency-tools-actions>*{width:100%}}
+
+.hospital-map{display:block;width:100%;height:330px;margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#f7faf8}
