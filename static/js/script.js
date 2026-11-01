@@ -20,6 +20,102 @@
   const maxBytes = 8 * 1024 * 1024;
   const maxRequestBytes = Math.floor(3.6 * 1024 * 1024);
   const percent = value => `${(Number(value) * 100).toFixed(1)}%`;
+  let currentLanguage = 'en';
+  const UI_TEXT = {
+    en:{analysis:'ANALYSIS',resultsTitle:'Results and precautions',languageLabel:'Language',symptomsHeading:'Emergency symptoms to watch for',dontHeading:'Do not do these things',firstAidHeading:'Immediate first aid while arranging transport',speciesPrecautionsHeading:'Precautions for the predicted species',biteUrgencyTitle:'TIME-CRITICAL: suspected bite — emergency care NOW',biteUrgencyText:'Leave for the nearest emergency-capable hospital immediately. Do not wait for swelling, pain, weakness, or this AI result.',speciesUrgencyTitle:'Snake photo is not a patient risk assessment',speciesUrgencyText:'If a person may have been bitten, seek emergency care now regardless of the predicted species or visible symptoms.',urgencyTitle:'TIME-CRITICAL: go to a hospital NOW',survivalWarning:'A photograph cannot predict survival time or show whether venom was injected. Do not wait for symptoms or an AI result. Immediate hospital assessment gives the patient the best chance of effective treatment.',refs:'References',uncertainTitle:'Unable to identify confidently',uncertainPrecautions:'General safety guidance (species not identified)',predictedPrecautions:'Precautions for the predicted species',speciesUnknown:'Species/risk status not assigned',unknownSummary:'The image may be unrelated, blurred, low-detail, or difficult for this classifier. Do not infer that a snake is present or absent from this output.',unknownSpeciesList:['Do not approach, touch, corner, or attempt to identify a snake at close range.','Keep people and pets away; contact a trained local snake rescuer if a snake is present.','For any suspected bite, seek emergency medical care immediately.']},
+    te:{analysis:'విశ్లేషణ',resultsTitle:'ఫలితాలు మరియు జాగ్రత్తలు',languageLabel:'భాష',symptomsHeading:'గమనించాల్సిన అత్యవసర లక్షణాలు',dontHeading:'చేయకూడని పనులు',firstAidHeading:'ఆసుపత్రికి తరలించేలోపు తక్షణ ప్రథమ చికిత్స',speciesPrecautionsHeading:'అంచనా వేసిన పాము జాతికి ప్రత్యేక జాగ్రత్తలు',biteUrgencyTitle:'అత్యవసరం: పాము కాటు అనుమానం — వెంటనే ఆసుపత్రికి వెళ్లండి',biteUrgencyText:'వెంటనే అత్యవసర వైద్యం అందించే సమీప ఆసుపత్రికి బయలుదేరండి. వాపు, నొప్పి, బలహీనత లేదా ఈ AI ఫలితం కోసం వేచి ఉండకండి.',speciesUrgencyTitle:'పాము ఫోటో రోగి ప్రమాద స్థాయిని నిర్ధారించదు',speciesUrgencyText:'ఎవరినైనా పాము కరిచి ఉండవచ్చని అనుమానం ఉంటే, అంచనా వేసిన జాతి లేదా కనిపించే లక్షణాలతో సంబంధం లేకుండా వెంటనే అత్యవసర వైద్యం పొందండి.',urgencyTitle:'అత్యవసరం: ఇప్పుడే ఆసుపత్రికి వెళ్లండి',survivalWarning:'ఫోటో ద్వారా రోగి ఎంతకాలం బతుకుతారో లేదా విషం శరీరంలోకి వెళ్లిందో చెప్పలేము. లక్షణాలు లేదా AI ఫలితం కోసం వేచి ఉండకండి. వెంటనే ఆసుపత్రిలో పరీక్ష చేయించుకోవడం సరైన చికిత్స పొందే అవకాశాన్ని పెంచుతుంది.',refs:'ఆధారాలు',uncertainTitle:'పామును నమ్మకంగా గుర్తించలేకపోయాం',uncertainPrecautions:'సాధారణ భద్రతా సూచనలు (జాతి గుర్తించబడలేదు)',predictedPrecautions:'అంచనా వేసిన పాము జాతికి జాగ్రత్తలు',speciesUnknown:'జాతి / ప్రమాద స్థాయి నిర్ధారించబడలేదు',unknownSummary:'చిత్రం సంబంధం లేనిదై ఉండవచ్చు, అస్పష్టంగా లేదా తక్కువ వివరాలతో ఉండవచ్చు. ఈ ఫలితం ఆధారంగా పాము ఉందని లేదా లేదని నిర్ణయించవద్దు.',unknownSpeciesList:['పాముకు దగ్గరగా వెళ్లవద్దు, తాకవద్దు, చుట్టుముట్టవద్దు లేదా దగ్గరగా గుర్తించడానికి ప్రయత్నించవద్దు.','ప్రజలు, పెంపుడు జంతువులను దూరంగా ఉంచండి; పాము ఉంటే శిక్షణ పొందిన స్థానిక స్నేక్ రెస్క్యూను సంప్రదించండి.','కాటు అనుమానం ఉన్నా వెంటనే అత్యవసర వైద్య సహాయం పొందండి.']},
+    hi:{analysis:'विश्लेषण',resultsTitle:'परिणाम और सावधानियाँ',languageLabel:'भाषा',symptomsHeading:'ध्यान देने योग्य आपातकालीन लक्षण',dontHeading:'ये काम बिल्कुल न करें',firstAidHeading:'अस्पताल पहुँचने तक तुरंत प्राथमिक सहायता',speciesPrecautionsHeading:'अनुमानित साँप की प्रजाति के अनुसार सावधानियाँ',biteUrgencyTitle:'अत्यावश्यक: साँप के काटने का संदेह — अभी अस्पताल जाएँ',biteUrgencyText:'तुरंत निकटतम आपातकालीन सुविधा वाले अस्पताल के लिए निकलें। सूजन, दर्द, कमजोरी या इस AI परिणाम का इंतज़ार न करें।',speciesUrgencyTitle:'साँप की फोटो रोगी के जोखिम का आकलन नहीं है',speciesUrgencyText:'यदि किसी व्यक्ति को साँप ने काटा हो सकता है, तो अनुमानित प्रजाति या दिखने वाले लक्षणों की परवाह किए बिना तुरंत आपातकालीन चिकित्सा लें।',urgencyTitle:'अत्यावश्यक: अभी अस्पताल जाएँ',survivalWarning:'फोटो से यह अनुमान नहीं लगाया जा सकता कि मरीज कितने समय तक जीवित रहेगा या शरीर में विष गया है या नहीं। लक्षणों या AI परिणाम का इंतज़ार न करें। तुरंत अस्पताल में जाँच से सही उपचार मिलने की संभावना बढ़ती है।',refs:'संदर्भ',uncertainTitle:'प्रजाति की विश्वसनीय पहचान नहीं हो सकी',uncertainPrecautions:'सामान्य सुरक्षा निर्देश (प्रजाति की पहचान नहीं हुई)',predictedPrecautions:'अनुमानित प्रजाति के लिए सावधानियाँ',speciesUnknown:'प्रजाति / जोखिम की पुष्टि नहीं हुई',unknownSummary:'तस्वीर असंबंधित, धुंधली या कम विवरण वाली हो सकती है। इस परिणाम से यह निष्कर्ष न निकालें कि साँप मौजूद है या नहीं।',unknownSpeciesList:['साँप के पास न जाएँ, उसे न छुएँ, घेरें नहीं और पास जाकर पहचानने की कोशिश न करें।','लोगों और पालतू जानवरों को दूर रखें; साँप दिखे तो प्रशिक्षित स्थानीय रेस्क्यू टीम से संपर्क करें।','काटने का संदेह हो तो तुरंत आपातकालीन चिकित्सा लें।']}
+  };
+  const BITE_TRANSLATIONS = {
+    te:{action:'కాటు గుర్తు చిన్నగా ఉన్నా లేదా మొదట్లో ఇబ్బంది లేకపోయినా, అనుమానిత పాము కాటుకు వెంటనే ఆసుపత్రి పరీక్ష అవసరం. లక్షణాలు లేదా AI ఫలితం కోసం వేచి ఉండకండి.',signs:['కాటు దగ్గర నొప్పి, వేగంగా పెరుగుతున్న వాపు, నీలి మచ్చలు, బొబ్బలు లేదా చర్మం రంగు మారడం.','కాటు దగ్గర, చిగుళ్లలో, ముక్కులో, మూత్రంలో లేదా ఇతర చోట్ల నుంచి రక్తం లేదా ద్రవం కారడం.','కనురెప్పలు వాలిపోవడం, రెండుగా కనిపించడం, మాట్లాడటం లేదా మింగడం కష్టమవడం, మెడ లేదా చేతులు/కాళ్లలో బలహీనత.','శ్వాస తీసుకోవడంలో ఇబ్బంది, మూర్ఛ భావన, గందరగోళం, కుప్పకూలడం, చల్లని చెమట లేదా షాక్ లక్షణాలు.','తీవ్రమైన కడుపు నొప్పి లేదా వాంతులు. క్రైట్ కాటులో బయట గాయం స్వల్పంగా ఉండి లక్షణాలు ఆలస్యంగా రావచ్చు.'],dont:['గాయాన్ని కోయవద్దు, విషాన్ని పీల్చవద్దు, పిసకవద్దు, మసాజ్ చేయవద్దు, మంచు పెట్టవద్దు; మూలికలు లేదా రసాయనాలు వేయవద్దు.','బిగుతైన టోర్నికెట్ కట్టవద్దు. ఒత్తిడి బ్యాండేజ్ ప్రతి పాము కాటుకు సరిపోదు; శిక్షణ పొందిన వైద్యుల సూచన లేకుండా వేయవద్దు.','రోగిని నడవనివ్వవద్దు; కదలిక తగ్గించి కరిచిన అవయవాన్ని స్ప్లింట్‌తో స్థిరపరచండి.'],note:'ఇది లక్షణాలపై అవగాహన కోసం మాత్రమే; వైద్య నిర్ధారణ లేదా చికిత్సా విధానం కాదు. విష ప్రభావాన్ని వైద్యులు మాత్రమే అంచనా వేసి యాంటీవెనమ్ అవసరాన్ని నిర్ణయించగలరు.',firstAid:['పాము నుంచి దూరంగా వెళ్లండి. దాన్ని పట్టుకోవడానికి లేదా చంపడానికి ప్రయత్నించవద్దు.','రోగిని ప్రశాంతంగా ఉంచి కదలిక తగ్గించండి; కరిచిన అవయవాన్ని స్థిరపరచండి.','వాపు వచ్చేలోపు కాటు దగ్గర ఉన్న ఉంగరాలు, గడియారాలు లేదా బిగుతైన వస్తువులను సులభంగా తొలగించగలిగితే తొలగించండి.','వెంటనే ఆసుపత్రికి తరలించండి. వెబ్‌సైట్ లేదా లక్షణాల కోసం వేచి ఉండకండి.','గాయాన్ని కోయడం, పీల్చడం, మసాజ్ చేయడం, మంచు పెట్టడం లేదా మూలికా మందులు వాడడం చేయవద్దు; బిగుతైన టోర్నికెట్ వేయవద్దు.']},
+    hi:{action:'काटने का निशान छोटा हो या शुरुआत में कोई परेशानी न हो, फिर भी हर संदिग्ध साँप के काटने पर तुरंत अस्पताल में जाँच जरूरी है। लक्षणों या AI परिणाम का इंतज़ार न करें।',signs:['काटने की जगह दर्द, तेजी से बढ़ती सूजन, नीलापन, फफोले या त्वचा का रंग बदलना।','काटने की जगह, मसूड़ों, नाक, पेशाब या किसी अन्य जगह से खून या तरल निकलना।','पलकें झुकना, दोहरा दिखना, बोलने या निगलने में कठिनाई, गर्दन या हाथ-पैरों में कमजोरी।','साँस लेने में कठिनाई, बेहोशी जैसा लगना, भ्रम, गिर पड़ना, ठंडी-चिपचिपी त्वचा या शॉक के लक्षण।','तेज पेट दर्द या उल्टी। करैत के काटने में बाहरी घाव कम दिख सकता है और लक्षण देर से आ सकते हैं।'],dont:['घाव को न काटें, विष चूसने की कोशिश न करें, न दबाएँ, मालिश न करें, बर्फ न लगाएँ और जड़ी-बूटी या रसायन न लगाएँ।','कसकर tourniquet न बाँधें। Pressure-immobilization हर साँप के काटने के लिए सही नहीं है; प्रशिक्षित चिकित्सा सलाह के बिना न करें।','मरीज को चलने न दें; उसे स्थिर रखें और काटे गए अंग को स्प्लिंट से immobilize करें।'],note:'यह केवल लक्षणों की जानकारी है; निदान या उपचार योजना नहीं। विष के प्रभाव और एंटीवेनम की आवश्यकता का निर्णय केवल चिकित्सक कर सकते हैं।',firstAid:['साँप से दूर हटें। उसे पकड़ने या मारने की कोशिश न करें।','मरीज को शांत और यथासंभव स्थिर रखें; काटे गए अंग को immobilize करें।','सूजन बढ़ने से पहले काटे गए हिस्से के पास की अंगूठी, घड़ी या तंग वस्तु आसानी से निकल सके तो निकाल दें।','तुरंत अस्पताल ले जाने की व्यवस्था करें। वेबसाइट या लक्षणों का इंतज़ार न करें।','घाव न काटें, न चूसें, मालिश न करें, बर्फ या घरेलू/हर्बल उपचार न लगाएँ; कसकर tourniquet न बाँधें।']}
+  };
+  const SPECIES_TRANSLATIONS = {
+    te:{
+      'Common Krait':['దగ్గరకు వెళ్లవద్దు, తాకవద్దు లేదా పట్టుకోవద్దు; వెనక్కి వెళ్లి శిక్షణ పొందిన రక్షకుడిని పిలవండి.','పాము ఉండే ప్రాంతాల్లో రాత్రి నేలపై నేరుగా పడుకోకుండా ఉండండి; నడిచే ముందు లైట్ ఉపయోగించండి.','కాటు అనుమానం ఉంటే బయట గాయం చిన్నదైనా రోగిని కదలకుండా ఉంచి వెంటనే ఆసుపత్రికి తీసుకెళ్లండి.'],
+      'King Cobra':['దగ్గరకు వెళ్లకుండా దూరంగా వెళ్లండి; దారి అడ్డుకోవద్దు లేదా దగ్గరగా ఫోటో తీయవద్దు.','ఇతరులను, పెంపుడు జంతువులను దూరంగా ఉంచండి; పాముకు వెళ్లే దారి ఇవ్వండి.','శిక్షణ పొందిన స్నేక్ రెస్క్యూ లేదా అటవీ అధికారులను సంప్రదించండి.'],
+      'Monocled Cobra':['నాగుపాము దగ్గరకు వెళ్లవద్దు; దూరం పెంచి దారి ఇవ్వండి.','దాన్ని పట్టుకోవడానికి, కొట్టడానికి లేదా చంపడానికి ప్రయత్నించవద్దు.','ప్రాంతాన్ని ఖాళీగా ఉంచి శిక్షణ పొందిన రక్షకుడిని పిలవండి. కాటు అనుమానం ఉంటే వెంటనే ఆసుపత్రికి వెళ్లండి.'],
+      "Russell's Viper":['పొలాలు, పొడవైన గడ్డి లేదా పొదల్లో మూసిన పాదరక్షలు ధరించండి; చీకట్లో టార్చ్ ఉపయోగించండి.','కనిపించని గడ్డి, ఎలుక బొరియలు, ఆకులు లేదా చెత్తలో చేతులు పెట్టవద్దు.','వైపర్‌ను తాకవద్దు లేదా తరలించవద్దు; కాటు అనుమానం ఉంటే వెంటనే వైద్య సహాయం పొందండి.'],
+      'Saw-scaled Viper':['రాతి లేదా పొదల ప్రాంతాల్లో మూసిన పాదరక్షలు ధరించి రాత్రి లైట్ ఉపయోగించండి.','రాళ్ల కుప్పలు, పగుళ్లు లేదా ఆకుల కింద చేతులు పెట్టవద్దు.','పామును తాకవద్దు లేదా చంపవద్దు. కాటు అనుమానం ఉంటే వెంటనే ఆసుపత్రికి వెళ్లండి.'],
+      'Spectacled Cobra':['దూరంగా ఉండండి; దగ్గరగా ఫోటో తీయడం, రెచ్చగొట్టడం లేదా పట్టుకోవడం చేయవద్దు.','ఇతరులను, పెంపుడు జంతువులను దూరంగా ఉంచి పాముకు బయటకు వెళ్లే దారి ఇవ్వండి.','ఇంటి దగ్గర కనిపిస్తే శిక్షణ పొందిన రక్షకుడిని పిలవండి. కాటు అనుమానం ఉంటే ఆసుపత్రికి వెళ్లండి.'],
+      'Banded Racer':['వెంటాడవద్దు, మూలకు నెట్టవద్దు, పట్టుకోవద్దు; వెళ్లేందుకు దారి ఇవ్వండి.','పిల్లలు, పెంపుడు జంతువులను దూరంగా ఉంచి దూరం నుంచి మాత్రమే గమనించండి.','ఇంట్లో కనిపిస్తే ఆ ప్రాంతాన్ని ఖాళీ చేసి రక్షకుడిని పిలవండి.'],
+      'Checkered Keelback':['చెరువు లేదా తడి తోట దగ్గర మొక్కలు, రాళ్లలో చేతులు పెట్టవద్దు.','వెనక్కి వెళ్లి పామును స్వయంగా వెళ్లనివ్వండి; పట్టుకోవద్దు.','ఇల్లు లేదా రద్దీ ప్రాంతంలో ఉంటే శిక్షణ పొందిన రక్షకుడిని పిలవండి.'],
+      'Common Rat Snake':['హానికరం కాదని భావించినా వెంటాడవద్దు లేదా పట్టుకోవద్దు; కాటు గాయం కలిగించవచ్చు.','దాని దారి నుంచి దూరంగా ఉండండి; మూలకు నెట్టవద్దు.','ఇంట్లో ఉంటే ప్రజలు, పెంపుడు జంతువులను దూరంగా ఉంచి రక్షకుడిని పిలవండి.'],
+      'Common Sand Boa':['తోటపని లేదా మట్టి/రాళ్లు కదిలించే ముందు చూడండి; రంధ్రాల్లో చేతులు పెట్టవద్దు.','పాము కనిపిస్తే పని ఆపి వెనక్కి వెళ్లండి; చేతితో పట్టుకోవద్దు.','తొలగించాల్సి వస్తే శిక్షణ పొందిన వన్యప్రాణి రక్షకుడిని పిలవండి.'],
+      'Common Trinket':['పట్టుకోవద్దు లేదా నొక్కిపట్టవద్దు; భయపడితే కాటు వేయవచ్చు.','దానికి దూరంగా ఉండి బయటకు వెళ్లే దారి ఇవ్వండి.','ఇంట్లో కనిపిస్తే గదిని ఖాళీ చేసి రక్షకుడిని పిలవండి.'],
+      'Green Tree Vine':['చెట్లు, పొదలు లేదా తీగల్లో చేతులు పెట్టే ముందు చూడండి.','చిన్నదిగా కనిపించినా పట్టుకోవద్దు లేదా ముఖానికి దగ్గరగా తీసుకురావద్దు.','ప్రజల దగ్గర ఉంటే దూరంగా ఉండి శిక్షణ పొందిన రక్షకుడిని పిలవండి.'],
+      'Indian Rock Python':['దగ్గరకు వెళ్లవద్దు, చుట్టుముట్టవద్దు లేదా పట్టుకోవద్దు; పెద్ద కొండచిలువ తీవ్రమైన గాయం చేయగలదు.','పిల్లలు, పెంపుడు జంతువులను దూరంగా ఉంచి పాముకు వెళ్లే దారి ఇవ్వండి.','శిక్షణ పొందిన వన్యప్రాణి రక్షణ సేవ లేదా అటవీ శాఖను సంప్రదించండి.']
+    },
+    hi:{
+      'Common Krait':['पास न जाएँ, छुएँ या पकड़ें नहीं; पीछे हटें और प्रशिक्षित रेस्क्यू टीम बुलाएँ।','साँप वाले क्षेत्रों में रात को फर्श पर सोने से बचें; रात में चलने से पहले रोशनी करें।','काटने का संदेह हो तो घाव छोटा दिखने पर भी मरीज को स्थिर रखकर तुरंत अस्पताल ले जाएँ।'],
+      'King Cobra':['पास न जाएँ; दूर हटें और उसका रास्ता न रोकें या नज़दीक से फोटो न लें।','लोगों और पालतू जानवरों को दूर रखें और साँप को निकलने का रास्ता दें।','प्रशिक्षित साँप रेस्क्यू टीम या वन अधिकारियों से संपर्क करें।'],
+      'Monocled Cobra':['कोबरा के पास न जाएँ; दूरी बढ़ाएँ और उसे निकलने का रास्ता दें।','उसे पकड़ने, मारने या छेड़ने की कोशिश न करें।','क्षेत्र खाली रखें और प्रशिक्षित रेस्क्यू टीम बुलाएँ। काटने का संदेह हो तो अस्पताल जाएँ।'],
+      "Russell's Viper":['खेतों, ऊँची घास या झाड़ियों में बंद जूते पहनें और अँधेरे में टॉर्च इस्तेमाल करें।','घनी घास, बिलों, पत्तों या मलबे में बिना देखे हाथ न डालें।','वाइपर को न छुएँ; काटने का संदेह हो तो तुरंत चिकित्सा लें।'],
+      'Saw-scaled Viper':['झाड़ियों और पथरीली जगहों पर बंद जूते पहनें और रात में रोशनी रखें।','पत्थरों के ढेर, दरारों या सूखे पत्तों में हाथ न डालें।','साँप को न छुएँ और न मारें। काटने का संदेह हो तो अस्पताल जाएँ।'],
+      'Spectacled Cobra':['दूरी बनाए रखें; पास जाकर फोटो न लें, उकसाएँ नहीं और पकड़ें नहीं।','लोगों और पालतू जानवरों को दूर रखें और साँप को निकलने का रास्ता दें।','घर के पास दिखे तो प्रशिक्षित रेस्क्यू टीम बुलाएँ। काटने का संदेह हो तो अस्पताल जाएँ।'],
+      'Banded Racer':['पीछा न करें, घेरें नहीं या पकड़ें नहीं; उसे निकलने का रास्ता दें।','बच्चों और पालतू जानवरों को दूर रखें और काफी दूरी से देखें।','घर के अंदर दिखे तो जगह खाली रखें और रेस्क्यू टीम बुलाएँ।'],
+      'Checkered Keelback':['तालाब या गीले बगीचे के पास पौधों या पत्थरों में हाथ न डालें।','पीछे हटें और साँप को खुद जाने दें; पकड़ने की कोशिश न करें।','घर या भीड़ वाली जगह में दिखे तो प्रशिक्षित रेस्क्यू टीम बुलाएँ।'],
+      'Common Rat Snake':['हानिरहित समझकर भी पीछा या पकड़ें नहीं; काटने से चोट लग सकती है।','उसके रास्ते से दूर रहें और उसे घेरें नहीं।','घर के अंदर हो तो लोगों और पालतू जानवरों को दूर रखें और रेस्क्यू टीम बुलाएँ।'],
+      'Common Sand Boa':['बागवानी या मिट्टी/पत्थर हटाने से पहले देखें; बिलों में हाथ न डालें।','दिखे तो काम रोकें और पीछे हटें; हाथ से पकड़ें नहीं।','हटाने के लिए प्रशिक्षित वन्यजीव रेस्क्यू टीम बुलाएँ।'],
+      'Common Trinket':['उसे पकड़ें या दबाएँ नहीं; डरने पर काट सकता है।','दूरी बनाए रखें और उसे निकलने का रास्ता दें।','घर में दिखे तो कमरा खाली करें और रेस्क्यू टीम बुलाएँ।'],
+      'Green Tree Vine':['पेड़ों, झाड़ियों या बेलों में हाथ डालने से पहले देखें।','छोटा दिखने पर भी उसे न पकड़ें और चेहरे के पास न लाएँ।','लोगों के पास हो तो दूर रहें और प्रशिक्षित रेस्क्यू टीम बुलाएँ।'],
+      'Indian Rock Python':['पास न जाएँ, घेरें या पकड़ें नहीं; बड़ा अजगर गंभीर चोट पहुँचा सकता है।','बच्चों और पालतू जानवरों को दूर रखें और उसे निकलने का रास्ता दें।','प्रशिक्षित वन्यजीव बचाव सेवा या वन विभाग से संपर्क करें।']
+    }
+  };
+  const currentUi = () => UI_TEXT[currentLanguage] || UI_TEXT.en;
+  function applyLanguage() {
+    const t=currentUi();
+    document.documentElement.lang=currentLanguage;
+    document.querySelectorAll('[data-i18n]').forEach(node=>{const key=node.dataset.i18n;if(t[key])node.textContent=t[key];});
+    document.querySelectorAll('.language-button').forEach(btn=>{const active=btn.dataset.language===currentLanguage;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});
+    document.getElementById('bite-urgency-text').textContent=t.biteUrgencyText;
+    document.getElementById('species-survival-warning').textContent=t.survivalWarning;
+    if(window.latestBiteResult)renderBiteLanguage(window.latestBiteResult);
+    if(window.latestSpeciesResult)renderSpeciesLanguage(window.latestSpeciesResult);
+  }
+  function renderBiteLanguage(result) {
+    const tr=BITE_TRANSLATIONS[currentLanguage];
+    if(!tr){
+      const g=result.bite_specific_guidance||{};
+      document.getElementById('bite-guidance-title').textContent=g.title||'Bite-specific warning signs';
+      document.getElementById('bite-guidance-action').textContent=g.action||'';
+      fillList(document.getElementById('bite-urgent-signs'),g.urgent_signs||[]);
+      fillList(document.getElementById('bite-do-not'),g.do_not||[]);
+      document.getElementById('bite-clinical-note').textContent=g.clinical_note||'';
+      fillList(document.getElementById('first-aid-list'),result.first_aid||[]);
+      return;
+    }
+    document.getElementById('bite-guidance-title').textContent=currentLanguage==='te'?'కాటు-సంబంధిత అత్యవసర హెచ్చరికలు':'काटने से जुड़े आपातकालीन चेतावनी संकेत';
+    document.getElementById('bite-guidance-action').textContent=tr.action;
+    fillList(document.getElementById('bite-urgent-signs'),tr.signs);
+    fillList(document.getElementById('bite-do-not'),tr.dont);
+    document.getElementById('bite-clinical-note').textContent=tr.note;
+    fillList(document.getElementById('first-aid-list'),tr.firstAid);
+  }
+  function renderSpeciesLanguage(result) {
+    const t=currentUi(),info=result.species_info||{},label=result.label;
+    const translated=SPECIES_TRANSLATIONS[currentLanguage]?.[label];
+    if(result.uncertain){
+      document.getElementById('species-uncertain-reason').textContent=currentLanguage==='te'?'మోడల్ స్కోరు '+percent(result.confidence)+', మొదటి రెండు అంచనాల మధ్య తేడా '+percent(result.top_two_margin)+'. నమ్మకమైన గుర్తింపుగా ఈ ఫలితాన్ని చూపడం లేదు.':'शीर्ष स्कोर '+percent(result.confidence)+' और पहले दो अनुमानों का अंतर '+percent(result.top_two_margin)+' है। इसे पक्की पहचान नहीं माना जा रहा है।';
+      document.getElementById('species-candidate').textContent=currentLanguage==='te'?'అంచనా మాత్రమే (ధృవీకరించబడలేదు): '+(result.candidate_label||'తెలియదు'):'संभावित नाम (पुष्टि नहीं): '+(result.candidate_label||'अज्ञात');
+      document.getElementById('species-uncertain-banner').querySelector('strong').textContent=t.uncertainTitle;
+      document.getElementById('species-status').textContent=t.speciesUnknown;
+      document.getElementById('species-summary').textContent=t.unknownSummary;
+      document.getElementById('species-precautions-wrap').querySelector('h4').textContent=t.uncertainPrecautions;
+      fillList(document.getElementById('species-precautions'),t.unknownSpeciesList);
+      return;
+    }
+    if(translated){
+      document.getElementById('species-summary').textContent=currentLanguage==='te'?'ఈ జాతి అంచనా మాత్రమే; ఫోటో ఆధారంగా ఖచ్చితమైన గుర్తింపు కాదు. పామును సమీపించవద్దు.':'यह केवल अनुमान है, फोटो से पुष्टि नहीं। साँप के पास न जाएँ।';
+      document.getElementById('species-precautions-wrap').querySelector('h4').textContent=t.predictedPrecautions;
+      fillList(document.getElementById('species-precautions'),translated);
+    } else {
+      document.getElementById('species-summary').textContent=info.summary||'';
+      document.getElementById('species-precautions-wrap').querySelector('h4').textContent=t.predictedPrecautions;
+      fillList(document.getElementById('species-precautions'),info.precautions||[]);
+    }
+  }
+
 
   function setImage(control, file) {
     if (!file) {
@@ -200,7 +296,7 @@
     element.replaceChildren();
     if (!sources || !sources.length) return;
     const heading = document.createElement('strong');
-    heading.textContent = 'References';
+    heading.textContent = currentUi().refs;
     element.appendChild(heading);
     const list = document.createElement('ul');
     sources.forEach(source => {
@@ -239,6 +335,7 @@
 
   function displayBite(result) {
     if (!result) return;
+    window.latestBiteResult = result;
     biteResultCard.classList.remove('hidden');
     let heading = `Model output: ${result.label}`;
     if (!result.class_mapping_verified) {
@@ -257,10 +354,12 @@
     document.getElementById('bite-clinical-note').textContent = biteGuidance.clinical_note || 'This is not a diagnosis or treatment plan.';
     displayWarnings('bite-warnings', 'bite-warning-list', result.warnings);
     fillSources(document.getElementById('bite-sources'), result.sources);
+    renderBiteLanguage(result);
   }
 
   function displaySpecies(result) {
     if (!result) return;
+    window.latestSpeciesResult = result;
     speciesResultCard.classList.remove('hidden');
     const info = result.species_info || {};
     document.getElementById('species-label').textContent = result.label;
@@ -306,6 +405,7 @@
       // The prediction remains uncertain unless the model's confidence gate is passed.
       precautionsWrap.querySelector('h4').textContent = 'Precautions for the predicted species';
     }
+    renderSpeciesLanguage(result);
   }
 
   async function loadDiagnostics() {
@@ -400,6 +500,8 @@
     }
   });
 
+  document.querySelectorAll('.language-button').forEach(btn => btn.addEventListener('click', () => { currentLanguage=btn.dataset.language||'en'; applyLanguage(); }));
+  applyLanguage();
   loadDiagnostics();
   window.addEventListener('beforeunload', () => {
     previewUrls.forEach(url => URL.revokeObjectURL(url));
