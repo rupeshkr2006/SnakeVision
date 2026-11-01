@@ -118,6 +118,8 @@
   function renderSpeciesLanguage(result) {
     const t=currentUi(),info=result.species_info||{},label=result.label;
     const translated=SPECIES_TRANSLATIONS[currentLanguage]?.[label];
+    const localizedScores=(result.top_predictions||[]).map(item=>({label:SPECIES_NAMES[currentLanguage]?.[item.label]||item.label,score:item.score}));
+    fillScoreList(document.getElementById('species-scores'),localizedScores,'purple');
     if(result.uncertain){
       document.getElementById('species-uncertain-reason').textContent=currentLanguage==='te'?'మోడల్ స్కోరు '+percent(result.confidence)+', మొదటి రెండు అంచనాల మధ్య తేడా '+percent(result.top_two_margin)+'. నమ్మకమైన గుర్తింపుగా ఈ ఫలితాన్ని చూపడం లేదు.':(currentLanguage==='hi'?'शीर्ष स्कोर '+percent(result.confidence)+' और पहले दो अनुमानों का अंतर '+percent(result.top_two_margin)+' है। इसे पक्की पहचान नहीं माना जा रहा है.':'The top score is '+percent(result.confidence)+' and the top-two score margin is '+percent(result.top_two_margin)+'. This is not a confident identification.');
       document.getElementById('species-candidate').textContent=currentLanguage==='te'?'అంచనా మాత్రమే (ధృవీకరించబడలేదు): '+(result.candidate_label||'తెలియదు'):(currentLanguage==='hi'?'संभावित नाम (पुष्टि नहीं): '+(result.candidate_label||'अज्ञात'):'Top candidate (not confirmed): '+(result.candidate_label||'unknown'));
