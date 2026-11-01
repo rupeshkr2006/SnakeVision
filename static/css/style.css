@@ -31,3 +31,11 @@
 .language-button.active{background:var(--green-soft);color:var(--green);border-color:#d5e9da}
 .language-button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 @media(max-width:480px){.language-switch{width:100%;justify-content:space-between}.language-switch>span{width:100%}.language-button{flex:1}}
+
+
+/* Page-wide language controls in the site header */
+.header-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+.site-header .language-switch{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.site-header .language-button{cursor:pointer}
+.site-header .language-button.active{font-weight:700;outline:2px solid currentColor;outline-offset:1px}
+@media(max-width:640px){.header-actions{align-items:flex-start;flex-direction:column;gap:8px}.site-header{gap:10px;align-items:flex-start}}
