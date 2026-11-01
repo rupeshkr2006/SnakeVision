@@ -103,6 +103,7 @@
         <div><div class="eyebrow" data-i18n="analysis">ANALYSIS</div><h2 data-i18n="resultsTitle">Results and precautions</h2></div>
 
       </div>
+      <section class="emergency-tools result-emergency-tools" aria-label="Find nearby hospitals"><div class="emergency-tools-copy"><h2>Need a hospital?</h2><p>Share your current location to find nearby hospitals and view them on the map.</p></div><div class="emergency-tools-actions"><button type="button" id="result-find-hospital-button" class="emergency-button">📍 Share location &amp; find nearby hospitals</button></div></section>
       <div class="result-grid">
         <article id="bite-result-card" class="result-card hidden">
           <div class="result-card-head"><span class="result-icon">01</span><span class="result-label" data-i18n="biteResultLabel">ONNX · BITE-AREA IMAGE SCORE</span></div>
@@ -116,12 +117,7 @@
             <p id="bite-urgency-text">Leave for the nearest emergency-capable hospital immediately. Do not wait for swelling, pain, weakness, or this AI result.</p>
           </div>
 
-          <div class="warning-callout urgent-callout">
-            <strong id="bite-survival-heading" data-page-i18n="biteSurvivalHeading">Can the bite-area model estimate survival time?</strong>
-            <p id="bite-survival-text" data-page-i18n="biteSurvivalText">No. It scores the uploaded image only. It cannot confirm a bite, venom injection, venom dose or patient condition. It cannot estimate survival time. If a bite is suspected, go to a hospital immediately.</p>
-          </div>
-
-          <div class="warning-callout urgent-callout">
+<div class="warning-callout urgent-callout">
             <strong id="bite-guidance-title">Bite-specific warning signs</strong>
             <p id="bite-guidance-action"></p>
             <h4 data-i18n="symptomsHeading">Emergency symptoms to watch for</h4>
@@ -150,12 +146,7 @@
             <h4 data-page-i18n="clinicalProfileHeading">Typical medical effects if envenoming occurs</h4>
             <p id="species-clinical-text"></p>
           </div>
-          <div class="warning-callout urgent-callout">
-            <strong data-i18n="speciesUrgencyTitle">Snake photo is not a patient risk assessment</strong>
-            <p data-i18n="speciesUrgencyText">If a person may have been bitten, seek emergency care now regardless of the predicted species or visible symptoms.</p>
-          </div>
-
-          <div id="species-precautions-wrap">
+<div id="species-precautions-wrap">
             <h4 data-i18n="speciesPrecautionsHeading">Precautions for the predicted species</h4>
             <ul id="species-precautions" class="precaution-list"></ul>
             <div id="species-sources" class="source-links"></div>
