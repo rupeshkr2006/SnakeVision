@@ -34,21 +34,6 @@
       </div>
     </section>
 
-    <section class="emergency-tools" aria-labelledby="emergency-tools-title">
-      <div class="emergency-tools-copy">
-        <h2 id="emergency-tools-title">Find the nearest hospital</h2>
-        <p id="emergency-tools-description">Tap the button and allow location access. SnakeVision will open nearby hospitals on Google Maps using your current location.</p>
-      </div>
-      <div class="emergency-tools-actions">
-        <button type="button" id="find-hospital-button" class="emergency-button">📍 Find nearest hospital</button>
-        <a class="emergency-call-button" href="tel:112">Call 112 emergency</a>
-      </div>
-      <p id="location-status" class="location-status" role="status" aria-live="polite">Your location is only requested after you press the button.</p>
-      <a id="hospital-map-link" class="hospital-map-link hidden" target="_blank" rel="noopener noreferrer">Open nearby hospitals in Google Maps ↗</a>
-      <iframe id="hospital-map" class="hospital-map hidden" title="Nearby hospitals map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      <small id="location-privacy-note">Your browser asks permission before sharing location. Location is used to create the map search link and is not sent to the SnakeVision server.</small>
-    </section>
-
     {% if not bite_model_ready or not species_model_ready %}
     <section class="error-banner">
       <strong>One or more model files could not be loaded.</strong>
@@ -103,7 +88,7 @@
         <div><div class="eyebrow" data-i18n="analysis">ANALYSIS</div><h2 data-i18n="resultsTitle">Results and precautions</h2></div>
 
       </div>
-      <section class="emergency-tools result-emergency-tools" aria-label="Find nearby hospitals"><div class="emergency-tools-copy"><h2>Need a hospital?</h2><p>Share your current location to find nearby hospitals and view them on the map.</p></div><div class="emergency-tools-actions"><button type="button" id="result-find-hospital-button" class="emergency-button">📍 Share location &amp; find nearby hospitals</button></div></section>
+
       <div class="result-grid">
         <article id="bite-result-card" class="result-card hidden">
           <div class="result-card-head"><span class="result-icon">01</span><span class="result-label" data-i18n="biteResultLabel">ONNX · BITE-AREA IMAGE SCORE</span></div>
@@ -168,6 +153,15 @@
   </main>
 
   <footer><span data-page-i18n="footerLeft">SnakeVision AI · Experimental local prototype</span><span data-page-i18n="footerRight">Predictions are estimates. Never approach or handle any snake.</span></footer>
+  <aside id="emergency-popup" class="emergency-popup hidden" role="alert" aria-live="assertive" aria-labelledby="emergency-popup-title">
+    <button type="button" id="emergency-popup-close" class="emergency-popup-close" aria-label="Dismiss emergency panel">×</button>
+    <div class="emergency-popup-kicker">SNAKEVISION EMERGENCY ALERT</div>
+    <h2 id="emergency-popup-title">Urgent medical attention may be needed</h2>
+    <p id="emergency-popup-message">A potentially venomous snake was detected. If anyone may have been bitten, do not wait for symptoms or this result.</p>
+    <div class="emergency-popup-actions"><a class="emergency-call-button" href="tel:112">Call 112 now</a><button type="button" id="popup-hospital-button" class="emergency-button">Share location for hospital directions</button></div>
+    <p id="popup-location-status" class="location-status" role="status" aria-live="polite">Location is requested only when you tap the hospital button.</p>
+    <a id="popup-hospital-link" class="hospital-map-link hidden" target="_blank" rel="noopener noreferrer">Open hospital directions ↗</a>
+  </aside>
   <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 </body>
 </html>
