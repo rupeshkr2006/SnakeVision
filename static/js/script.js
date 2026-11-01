@@ -43,7 +43,9 @@
     const t = emergencyText[currentLanguage] || emergencyText.en;
     const status = document.getElementById('location-status');
     const link = document.getElementById('hospital-map-link');
+    const map = document.getElementById('hospital-map');
     link.classList.add('hidden');
+    map.classList.add('hidden');
     if (!('geolocation' in navigator)) {
       status.textContent = t.unsupported; status.dataset.state = 'error'; return;
     }
@@ -51,8 +53,9 @@
     navigator.geolocation.getCurrentPosition(position => {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
-      const mapsUrl = 'https://www.google.com/maps/search/?api=1&query=hospitals&query_place_id=&center=' + encodeURIComponent(lat + ',' + lon);
       link.href = 'https://www.google.com/maps/search/hospitals/@' + lat + ',' + lon + ',14z';
+      map.src = 'https://maps.google.com/maps?q=' + encodeURIComponent('hospitals near ' + lat + ',' + lon) + '&output=embed';
+      map.classList.remove('hidden');
       link.textContent = t.map;
       link.classList.remove('hidden');
       status.textContent = (currentLanguage === 'te' ? 'లొకేషన్ పొందబడింది. మ్యాప్‌లో దగ్గరలోని ఆసుపత్రులను తెరవండి.' : currentLanguage === 'hi' ? 'लोकेशन मिल गई। मैप में नज़दीकी अस्पताल खोलें।' : 'Location received. Open the map to view nearby hospitals.') + ' (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + ')';
