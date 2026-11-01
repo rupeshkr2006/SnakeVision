@@ -102,6 +102,11 @@
           </div>
 
           <div class="warning-callout urgent-callout">
+          <div class="warning-callout urgent-callout">
+            <strong id="bite-survival-heading" data-page-i18n="biteSurvivalHeading">Can this model estimate survival time after a bite?</strong>
+            <p id="bite-survival-text" data-page-i18n="biteSurvivalText">No. The bite-area image model only classifies the uploaded image. It cannot tell whether a snake bite occurred, whether venom entered the body, how much venom was injected, or how quickly a patient may deteriorate. There is no reliable survival-time estimate from this result. If a bite is suspected, get emergency medical care immediately.</p>
+          </div>
+
             <strong id="bite-guidance-title">Bite-specific warning signs</strong>
             <p id="bite-guidance-action"></p>
             <h4 data-i18n="symptomsHeading">Emergency symptoms to watch for</h4>
@@ -140,17 +145,6 @@
           <div class="warning-callout urgent-callout"><strong id="species-survival-heading" data-page-i18n="survivalHeading">If this snake bites someone</strong><p id="species-survival-text" data-page-i18n="survivalText">A reliable survival time cannot be estimated from a snake photo or species label. The outcome depends on the bite and the patient\’s condition and treatment. Treat every suspected bite as an emergency and go to a hospital immediately.</p></div>
         </article>
       </div>
-    </section>
-
-    <section class="diagnostics-panel">
-      <div class="section-heading"><span class="step">03</span><div><h2 data-page-i18n="modelChecks">Model checks before public use</h2><p data-page-i18n="modelChecksText">These checks show what is verified and what still needs human review.</p></div></div>
-      <div class="diagnostics-grid">
-        <div class="diagnostic-item"><strong data-page-i18n="diagOrder">ONNX class order</strong><span id="diag-bite-order" class="diagnostic-status" data-page-i18n="checking">Checking…</span><p data-page-i18n="diagOrderText">Confirm output index 0 and 1 against the original MATLAB class list.</p></div>
-        <div class="diagnostic-item"><strong data-page-i18n="diagPreprocess">ONNX preprocessing</strong><span id="diag-bite-preprocess" class="diagnostic-status">Checking…</span><p data-page-i18n="diagPreprocessText">Confirm RGB/BGR, pixel scale, resize and normalization in MATLAB.</p></div>
-        <div class="diagnostic-item"><strong data-page-i18n="diagThreshold">Species thresholds</strong><span id="diag-species-threshold" class="diagnostic-status">Checking…</span><p data-page-i18n="diagThresholdText">Calibrate on labeled validation snakes plus unrelated negative controls—not test images.</p></div>
-        <div class="diagnostic-item"><strong data-page-i18n="diagUploads">Uploads & privacy</strong><span class="diagnostic-status good" data-page-i18n="diagMemory">Memory only</span><p data-page-i18n="diagPrivacyText">Uploads are size/type checked and not deliberately written to disk by this app.</p></div>
-      </div>
-      <p class="diagnostics-note" data-page-i18n="diagNote">A score threshold can flag some uncertain images, but it cannot replace a separately trained and tested snake-versus-non-snake detector. Even a high score can be wrong.</p>
     </section>
 
     <section class="safety">
