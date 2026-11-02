@@ -110,7 +110,6 @@
   function applyLanguage() {
     const t=currentUi();
     const page=PAGE_TEXT[currentLanguage]||PAGE_TEXT.en;
-    renderEmergencyTools();
     document.documentElement.lang=currentLanguage;
     document.querySelectorAll('[data-page-i18n]').forEach(node=>{const key=node.dataset.pageI18n;if(page[key])node.textContent=page[key];});
     document.querySelectorAll('[data-i18n]').forEach(node=>{const key=node.dataset.i18n;if(t[key])node.textContent=t[key];});
