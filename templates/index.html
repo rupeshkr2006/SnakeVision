@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SnakeVision AI | Snake Classification & Safety</title>
   <meta name="description" content="Experimental snake-species image classification, bite-area image scoring, species precautions, and conservative emergency guidance.">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20261102') }}">
 </head>
 <body>
   <header class="site-header">
     <a class="brand" href="/" aria-label="SnakeVision home">
       <span class="brand-mark">S</span>
-      <span>SnakeVision <small>AI CLASSIFICATION</small></span>
+      <span>SnakeVision <small>DEEP LEARNING CLASSIFICATION</small></span>
     </a>
     <div class="header-actions"><div class="language-switch" role="group" aria-label="Choose language"><span data-i18n="languageLabel">Language</span><button type="button" class="language-button active" data-language="en" aria-pressed="true">English</button><button type="button" class="language-button" data-language="te" aria-pressed="false">తెలుగు</button><button type="button" class="language-button" data-language="hi" aria-pressed="false">हिंदी</button></div><span class="header-pill"><span class="status-dot"></span><span data-page-i18n="pageLocalPrototype">Local prototype</span></span></div>
   </header>
@@ -162,6 +162,6 @@
     <p id="popup-location-status" class="location-status" role="status" aria-live="polite">Location is requested only when you tap the hospital button.</p>
     <a id="popup-hospital-link" class="hospital-map-link hidden" target="_blank" rel="noopener noreferrer">Open hospital directions ↗</a>
   </aside>
-  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/script.js', v='20261102') }}" defer></script>
 </body>
 </html>
